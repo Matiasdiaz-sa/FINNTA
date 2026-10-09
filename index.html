@@ -10,6 +10,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+    <!-- AOS Scroll Animations -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
     
     <!-- Three.js para el personalizador (calcomanías proyectadas sobre la malla real) -->
     <!-- El import map tiene que ir ANTES de cualquier script type="module" -->
@@ -61,9 +66,12 @@
             <div class="hero-bottom-decoration desktop-wave">
                 <svg class="hero-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
                     <defs>
-                        <pattern id="pitchPattern" patternUnits="userSpaceOnUse" width="100" height="100">
-                            <rect width="50" height="100" fill="#32A83E" />
-                            <rect x="50" width="50" height="100" fill="#2A9134" />
+                        <pattern id="pitchPattern" patternUnits="userSpaceOnUse" width="400" height="400">
+                            <!-- Stripes for pitch -->
+                            <rect width="200" height="400" fill="#32A83E" />
+                            <rect x="200" width="200" height="400" fill="#2A9134" />
+                            <!-- Grass texture overlay -->
+                            <image href="grass_texture.jpg" x="0" y="0" width="400" height="400" preserveAspectRatio="none" style="mix-blend-mode: overlay; opacity: 0.85;" />
                         </pattern>
                     </defs>
                     <path fill="url(#pitchPattern)" d="M 0 120 Q 360 20 720 120 T 1440 120 L 1440 240 Q 1080 340 720 240 T 0 240 Z" />
@@ -95,11 +103,11 @@
         <!-- Product Features / 3D Real Display -->
         <section id="detalles" class="features-section">
             <div class="feature-grid">
-                <div class="feature-text">
+                <div class="feature-text" data-aos="fade-right">
                     <h2>TU PASIÓN,<br>DESDE CADA ÁNGULO</h2>
                     <p>Explorá el diseño de tu club en 3D real. Calidad premium, colores vibrantes y detalles pensados para llevar tu identidad a todos lados. Arrastrá para interactuar libremente.</p>
                 </div>
-                <div class="feature-image model-container">
+                <div class="feature-image model-container" data-aos="fade-left" data-aos-delay="200">
                     <model-viewer 
                         src="Meshy_AI_Black_Slide_Sandal_1009171551_texture.glb" 
                         alt="Visión 3D real del calzado"
@@ -121,7 +129,7 @@
         <section id="personalizar" class="customizer-section spa-mode">
             
             <!-- Desktop Header -->
-            <div class="desktop-header customizer-header">
+            <div class="desktop-header customizer-header" data-aos="fade-up">
                 <h2>100% TU CLUB</h2>
                 <p>Subí tu escudo y se estampa en vivo sobre la sandalia 3D. Tocá la tira para ubicarlo donde quieras.</p>
             </div>
@@ -165,8 +173,12 @@
                 </div>
 
                 <!-- CONTROLES -->
-                <div class="spa-controls customizer-controls">
-                    
+                <div class="spa-controls customizer-controls" data-aos="fade-left" data-aos-delay="200">
+                    <div class="controls-intro">
+                        <h3 class="config-title">Configuración</h3>
+                        <p class="config-desc">Personalizá cada detalle. Tu diseño se renderiza en tiempo real.</p>
+                    </div>
+
                     <div class="control-group">
                         <label class="control-label">1. Cantidad</label>
                         <select id="order-qty" class="custom-input no-upper compact-select">
@@ -259,5 +271,15 @@
 
     <script src="script.js"></script>
     <script type="module" src="customizer.js"></script>
+
+    <!-- AOS JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+    </script>
 </body>
 </html>
