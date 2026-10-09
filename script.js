@@ -30,10 +30,19 @@ maskContainer.addEventListener('mouseleave', () => {
     maskContainer.style.setProperty('--mouse-y', `-999px`);
 });
 
-// --- Botones "Crear mi par" / "Empezar a personalizar" -> scroll al personalizador 3D ---
-// (La lógica del personalizador vive en customizer.js)
+// --- Botones "Crear mi par" / "Empezar a personalizar" -> Abrir SPA ---
 document.querySelectorAll('.cta-nav, .sequence-content .btn-primary').forEach((btn) => {
     btn.addEventListener('click', () => {
-        document.getElementById('personalizar').scrollIntoView({ behavior: 'smooth' });
+        const spa = document.getElementById('personalizar');
+        spa.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Evita scrollear fondo
+        
+        // Disparamos resize para que el canvas de Three.js se acomode
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
     });
+});
+
+document.getElementById('btn-close-customizer').addEventListener('click', () => {
+    document.getElementById('personalizar').classList.remove('active');
+    document.body.style.overflow = '';
 });
