@@ -58,7 +58,26 @@
             </div>
             
             <!-- Football Wave & Text Path -->
-            <div class="circular-badge">
+            <div class="hero-bottom-decoration desktop-wave">
+                <svg class="hero-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+                    <defs>
+                        <pattern id="pitchPattern" patternUnits="userSpaceOnUse" width="100" height="100">
+                            <rect width="50" height="100" fill="#32A83E" />
+                            <rect x="50" width="50" height="100" fill="#2A9134" />
+                        </pattern>
+                    </defs>
+                    <path fill="url(#pitchPattern)" d="M 0 120 Q 360 20 720 120 T 1440 120 L 1440 240 Q 1080 340 720 240 T 0 240 Z" />
+                    <path id="textPath" fill="none" d="M 0 190 Q 360 90 720 190 T 1440 190 T 2160 190 T 2880 190 T 3600 190 T 4320 190 T 5040 190" />
+                    <text font-family="'Outfit', sans-serif" font-size="28" font-weight="900" fill="#ffffff" letter-spacing="2">
+                        <textPath href="#textPath" startOffset="0">
+                            🏃‍♂️ PISÁ CON GAMBETA ⚽ • 👟 DISEÑO PREMIUM 🏟️ • 🇦🇷 TU CLUB. TU IDENTIDAD 🏆 • 🏃‍♂️ PISÁ CON GAMBETA ⚽ • 👟 DISEÑO PREMIUM 🏟️ • 🇦🇷 TU CLUB. TU IDENTIDAD 🏆 • 🏃‍♂️ PISÁ CON GAMBETA ⚽ • 👟 DISEÑO PREMIUM 🏟️ • 🇦🇷 TU CLUB. TU IDENTIDAD 🏆 • 🏃‍♂️ PISÁ CON GAMBETA ⚽ • 👟 DISEÑO PREMIUM 🏟️ • 🇦🇷 TU CLUB. TU IDENTIDAD 🏆
+                            <animate attributeName="startOffset" from="0" to="-3000" begin="0s" dur="30s" repeatCount="indefinite" />
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+
+            <div class="circular-badge mobile-badge">
                 <svg viewBox="0 0 200 200" width="160" height="160">
                     <path id="circle-path" fill="none" d="M 100, 100 m -65, 0 a 65,65 0 1,1 130,0 a 65,65 0 1,1 -130,0"/>
                     <circle cx="100" cy="100" r="45" fill="var(--accent-color)" />
@@ -98,8 +117,15 @@
             </div>
         </section>
 
-        <!-- Interactive Customizer SPA -->
+        <!-- Interactive Customizer -->
         <section id="personalizar" class="customizer-section spa-mode">
+            
+            <!-- Desktop Header -->
+            <div class="desktop-header customizer-header">
+                <h2>100% TU CLUB</h2>
+                <p>Subí tu escudo y se estampa en vivo sobre la sandalia 3D. Tocá la tira para ubicarlo donde quieras.</p>
+            </div>
+
             <div class="spa-header">
                 <button class="btn-back" id="btn-close-customizer">
                     <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -107,14 +133,14 @@
                 </button>
                 <div class="spa-logo">FINNTA</div>
                 <div class="spa-price">
-                    <span class="price-label">Precio:</span>
+                    <span class="price-label">Precio estimado</span>
                     <span class="price-value">$45.000 ARS</span>
                 </div>
             </div>
 
-            <div class="spa-workspace">
+            <div class="spa-workspace customizer-workspace">
                 <!-- PREVIEW 3D -->
-                <div class="spa-preview">
+                <div class="spa-preview customizer-preview">
                     <div class="preview-stage" id="preview-stage">
                         <canvas id="customizer-canvas" aria-label="Previsualización 3D"></canvas>
 
@@ -138,8 +164,8 @@
                     </div>
                 </div>
 
-                <!-- CONTROLES (Horizontal Dock) -->
-                <div class="spa-controls">
+                <!-- CONTROLES -->
+                <div class="spa-controls customizer-controls">
                     
                     <div class="control-group">
                         <label class="control-label">1. Cantidad</label>
