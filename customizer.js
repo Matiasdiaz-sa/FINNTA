@@ -315,9 +315,14 @@ function drawText() {
         ctx.lineJoin = 'round';
         // borde sutil para que se lea sobre cualquier color de base
         ctx.lineWidth = fs * 0.07;
-        ctx.strokeStyle = isLight(state.textColor) ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)';
+        if (state.quantity === 'minorista') {
+            ctx.fillStyle = '#181818';
+            ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+        } else {
+            ctx.fillStyle = state.textColor;
+            ctx.strokeStyle = isLight(state.textColor) ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)';
+        }
         ctx.strokeText(str, W / 2, H / 2 + fs * 0.04);
-        ctx.fillStyle = state.textColor;
         ctx.fillText(str, W / 2, H / 2 + fs * 0.04);
     }
     textTexture.needsUpdate = true;
@@ -638,6 +643,8 @@ $('order-qty').addEventListener('change', (e) => {
         swatches.classList.remove('disabled');
         swatches.style.opacity = '1';
         swatches.style.pointerEvents = 'auto';
+        $('text-swatches').style.opacity = '1';
+        $('text-swatches').style.pointerEvents = 'auto';
         heading.classList.remove('disabled-text');
         badge.style.display = 'none';
         $('shield-heading').textContent = '3. Escudo del equipo (Impresión a todo color)';
@@ -645,6 +652,8 @@ $('order-qty').addEventListener('change', (e) => {
         swatches.classList.add('disabled');
         swatches.style.opacity = '0.4';
         swatches.style.pointerEvents = 'none';
+        $('text-swatches').style.opacity = '0.4';
+        $('text-swatches').style.pointerEvents = 'none';
         heading.classList.add('disabled-text');
         badge.style.display = 'inline-block';
         $('shield-heading').textContent = '3. Escudo del equipo (Grabado sin color)';
@@ -653,11 +662,26 @@ $('order-qty').addEventListener('change', (e) => {
         }
     }
     drawShield();
+    drawText();
 });
 
 bindSwatches('text-swatches', (color, name) => {
     state.textColor = color;
     state.textColorName = name;
+    
+    const wrapper = $('text-swatches').querySelector('.color-picker-wrapper');
+    if (wrapper) wrapper.classList.remove('active');
+    
+    drawText();
+});
+
+$('text-color-picker').addEventListener('input', (e) => {
+    const wrap = $('text-swatches');
+    wrap.querySelectorAll('.color-swatch').forEach((s) => s.classList.remove('active'));
+    e.target.parentElement.classList.add('active');
+    
+    state.textColor = e.target.value;
+    state.textColorName = "Personalizado";
     drawText();
 });
 
