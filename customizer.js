@@ -609,6 +609,22 @@ bindSwatches('base-swatches', (color, name) => {
     state.baseName = name;
     $('base-name').textContent = name;
     applyBaseColor();
+    
+    // Deselect color picker wrapper if a standard swatch is clicked
+    const wrapper = $('base-swatches').querySelector('.color-picker-wrapper');
+    if (wrapper) wrapper.classList.remove('active');
+});
+
+$('base-color-picker').addEventListener('input', (e) => {
+    const wrap = $('base-swatches');
+    wrap.querySelectorAll('.color-swatch').forEach((s) => s.classList.remove('active'));
+    e.target.parentElement.classList.add('active');
+    
+    const color = e.target.value;
+    state.baseColor = color;
+    state.baseName = "Personalizado";
+    $('base-name').textContent = "Personalizado";
+    applyBaseColor();
 });
 
 $('order-qty').addEventListener('change', (e) => {
@@ -654,6 +670,11 @@ $('custom-text-input').addEventListener('input', (e) => {
 
 $('text-size').addEventListener('input', (e) => {
     decals.text.scale = parseFloat(e.target.value);
+    buildDecal('text');
+});
+
+$('text-rot').addEventListener('input', (e) => {
+    decals.text.rot = parseFloat(e.target.value);
     buildDecal('text');
 });
 
