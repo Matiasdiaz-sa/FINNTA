@@ -698,9 +698,10 @@ function handleShieldFile(file) {
 
         $('shield-thumb').src = url;
         $('shield-thumb').hidden = false;
-        $('upload-icon').style.display = 'none';
+        if ($('upload-icon')) $('upload-icon').style.display = 'none';
         $('upload-text').textContent = 'Cambiar imagen';
         $('shield-tools').hidden = false;
+        $('shield-remove').hidden = false;
         toast('¡Escudo estampado! Tocá la sandalia para moverlo.');
     };
     img.onerror = () => toast('No pudimos leer esa imagen. Asegurate de que sea un PNG válido.');
@@ -751,9 +752,10 @@ $('shield-remove').addEventListener('click', () => {
     buildDecal('shield');
     $('shield-upload').value = '';
     $('shield-thumb').hidden = true;
-    $('upload-icon').style.display = '';
-    $('upload-text').textContent = 'Subir imagen (.png, .jpg)';
+    if ($('upload-icon')) $('upload-icon').style.display = '';
+    $('upload-text').textContent = 'Subir PNG';
     $('shield-tools').hidden = true;
+    $('shield-remove').hidden = true;
 });
 
 // ---------------------------------------------------------------------
