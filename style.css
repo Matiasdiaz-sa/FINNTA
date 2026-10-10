@@ -111,7 +111,24 @@ p {
 
 .btn-primary:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(0, 77, 255, 0.2);
+    box-shadow: 0 10px 20px rgba(42, 145, 52, 0.3);
+}
+
+.btn-whatsapp {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.btn-whatsapp:hover {
+    box-shadow: 0 10px 25px rgba(37, 211, 102, 0.4);
+    transform: translateY(-4px);
 }
 
 .btn-large {
@@ -493,6 +510,13 @@ p {
     font-size: 1rem;
     color: var(--text-secondary);
     line-height: 1.4;
+}
+
+.control-group {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.03);
 }
 
 .control-group h3 {
@@ -913,6 +937,57 @@ footer p {
         font-size: 0.95rem;
     }
 }
+
+/* Premium Input Styles (Desktop & Base) */
+.compact-select, .compact-input {
+    width: 100%;
+    height: 52px;
+    padding: 0 1rem;
+    border-radius: 12px;
+    border: 2px solid #E5E5E5;
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    background: #ffffff;
+    transition: all 0.2s ease;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+}
+.compact-input { cursor: text; }
+
+.compact-select:hover, .compact-input:hover {
+    border-color: #cccccc;
+}
+
+.compact-select:focus, .compact-input:focus {
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(42, 145, 52, 0.15);
+}
+
+.compact-upload { width: 100%; margin-bottom: 0.5rem; }
+.compact-upload .upload-btn {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; padding: 1.2rem; width: 100%;
+    background: #ffffff; border: 2px dashed #cccccc; border-radius: 12px;
+    font-weight: 600; cursor: pointer; color: #555;
+    transition: all 0.2s ease;
+}
+.compact-upload .upload-btn:hover {
+    border-color: var(--accent-color); color: var(--accent-color); background: rgba(42, 145, 52, 0.05);
+}
+
+.mini-tools { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem; }
+.mini-tools[hidden] { display: none; }
+.mini-check { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; font-weight: 500; cursor: pointer; }
+.mini-check input { width: 18px; height: 18px; accent-color: var(--accent-color); cursor: pointer; }
+
+.mini-slider { display: grid; grid-template-columns: 45px 1fr; align-items: center; gap: 0.8rem; font-size: 0.95rem; font-weight: 500; color: var(--text-secondary); }
+.mini-slider input[type="range"] { width: 100%; accent-color: var(--accent-color); cursor: pointer; }
+
+.mini-swatches { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
+.mini-swatches .color-swatch { --size: 32px; width: var(--size); height: var(--size); }
 /* =========================================================================
    MOBILE SPA OVERRIDES
    On mobile, we transform the customizer section into a full screen SPA overlay,
@@ -1040,8 +1115,11 @@ footer p {
 
     .spa-controls .control-group {
         flex: 0 0 auto;
+        background: transparent;
+        border-radius: 0;
+        border: none;
         border-right: 1px solid var(--border-color);
-        padding-right: 1.5rem;
+        padding: 0 1.5rem 0 0;
         min-width: 85vw;
         scroll-snap-align: start;
     }
