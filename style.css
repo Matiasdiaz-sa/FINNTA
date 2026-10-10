@@ -519,15 +519,21 @@ p {
     border: 1px solid rgba(0,0,0,0.03);
 }
 
-.control-group h3 {
-    font-size: 1.2rem;
-    margin-bottom: 0.9rem;
+.control-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
     font-family: 'Outfit', sans-serif;
+    color: var(--text-primary);
+    letter-spacing: 0.2px;
 }
 
 .control-caption {
     display: block;
-    margin-top: 0.6rem;
+    margin-top: 1rem;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-secondary);
@@ -536,7 +542,7 @@ p {
 .color-swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.7rem;
+    gap: 1rem;
 }
 
 .color-swatch {
@@ -611,8 +617,8 @@ p {
 .text-tools {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    margin-top: 1rem;
+    gap: 1.2rem;
+    margin-top: 1.5rem;
 }
 
 .shield-tools[hidden] {
@@ -1129,12 +1135,8 @@ footer p {
     }
 
     .control-label {
-        display: block;
         font-size: 0.95rem;
-        font-weight: 700;
         margin-bottom: 0.8rem;
-        font-family: 'Outfit', sans-serif;
-        color: var(--text-primary);
     }
     
     /* Control inputs overrides for mobile */
