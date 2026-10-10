@@ -518,6 +518,7 @@ loader.load(
         drawText();
         buildDecal('text');
         buildDecal('shield');
+        applyBaseColor();
 
         loaderEl.classList.add('hidden');
     },
