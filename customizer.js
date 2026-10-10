@@ -639,6 +639,9 @@ $('order-qty').addEventListener('change', (e) => {
     const swatches = $('base-swatches');
     const badge = $('color-badge');
     const heading = $('color-heading');
+    const textBadge = $('text-badge');
+    const textHeading = $('text-heading');
+    
     if (isMayorista) {
         swatches.classList.remove('disabled');
         swatches.style.opacity = '1';
@@ -646,7 +649,9 @@ $('order-qty').addEventListener('change', (e) => {
         $('text-swatches').style.opacity = '1';
         $('text-swatches').style.pointerEvents = 'auto';
         heading.classList.remove('disabled-text');
+        if (textHeading) textHeading.classList.remove('disabled-text');
         badge.style.display = 'none';
+        if (textBadge) textBadge.style.display = 'none';
         $('shield-heading').textContent = '3. Escudo del equipo (Impresión a todo color)';
     } else {
         swatches.classList.add('disabled');
@@ -655,7 +660,9 @@ $('order-qty').addEventListener('change', (e) => {
         $('text-swatches').style.opacity = '0.4';
         $('text-swatches').style.pointerEvents = 'none';
         heading.classList.add('disabled-text');
+        if (textHeading) textHeading.classList.add('disabled-text');
         badge.style.display = 'inline-block';
+        if (textBadge) textBadge.style.display = 'inline-block';
         $('shield-heading').textContent = '3. Escudo del equipo (Grabado sin color)';
         if (state.baseColor !== 'original') {
             swatches.querySelector('[data-color="original"]').click();
