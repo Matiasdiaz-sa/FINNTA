@@ -333,8 +333,46 @@ function isLight(hex) {
     return (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) > 0.6;
 }
 
+// Algoritmo de flood-fill para borrar fondo blanco conectado al borde
+function removeWhiteBackground(ctx, w, h) {
+    const data = ctx.getImageData(0, 0, w, h);
+    const p = data.data;
+    const isBg = (i) => {
+        const a = p[i + 3];
+        if (a < 20) return true;
+        const r = p[i], g = p[i + 1], b = p[i + 2];
+        const mn = Math.min(r, g, b), mx = Math.max(r, g, b);
+        return mn > 215 && mx - mn < 32;
+    };
+    const visited = new Uint8Array(w * h);
+    const queue = new Int32Array(w * h);
+    let head = 0, tail = 0;
+    const push = (idx) => {
+        if (visited[idx]) return;
+        visited[idx] = 1;
+        if (isBg(idx * 4)) queue[tail++] = idx;
+    };
+    for (let i = 0; i < w; i++) {
+        push(i);
+        push((h - 1) * w + i);
+    }
+    for (let j = 0; j < h; j++) {
+        push(j * w);
+        push(j * w + w - 1);
+    }
+    while (head < tail) {
+        const idx = queue[head++];
+        p[idx * 4 + 3] = 0;
+        const x = idx % w, y = (idx / w) | 0;
+        if (x > 0) push(idx - 1);
+        if (x < w - 1) push(idx + 1);
+        if (y > 0) push(idx - w);
+        if (y < h - 1) push(idx + w);
+    }
+    ctx.putImageData(data, 0, 0);
+}
+
 // Dibuja el escudo centrado y, si se pide, borra el fondo blanco conectado al borde
-// (flood-fill: no borra los blancos que están DENTRO del escudo).
 function drawShield() {
     const img = state.shieldImage;
     const S = shieldCanvas.width;
@@ -349,36 +387,7 @@ function drawShield() {
     ctx.drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
 
     if (state.removeWhite) {
-        const data = ctx.getImageData(0, 0, S, S);
-        const p = data.data;
-        const isBg = (i) => {
-            const a = p[i + 3];
-            if (a < 20) return true;
-            const r = p[i], g = p[i + 1], b = p[i + 2];
-            const mn = Math.min(r, g, b), mx = Math.max(r, g, b);
-            return mn > 220 && mx - mn < 28;
-        };
-        const visited = new Uint8Array(S * S);
-        const queue = new Int32Array(S * S);
-        let head = 0, tail = 0;
-        const push = (idx) => {
-            if (visited[idx]) return;
-            visited[idx] = 1;
-            if (isBg(idx * 4)) queue[tail++] = idx;
-        };
-        for (let i = 0; i < S; i++) {
-            push(i); push((S - 1) * S + i); push(i * S); push(i * S + S - 1);
-        }
-        while (head < tail) {
-            const idx = queue[head++];
-            p[idx * 4 + 3] = 0;
-            const x = idx % S, y = (idx / S) | 0;
-            if (x > 0) push(idx - 1);
-            if (x < S - 1) push(idx + 1);
-            if (y > 0) push(idx - S);
-            if (y < S - 1) push(idx + S);
-        }
-        ctx.putImageData(data, 0, 0);
+        removeWhiteBackground(ctx, S, S);
     }
 
     // Efecto "grabado" realista (solo para minoristas)
@@ -422,17 +431,20 @@ function applyBaseColor() {
 //  CÁMARA
 // ---------------------------------------------------------------------
 function fitDistance() {
+    if (!modelBox) return 2.6;
     const r = modelBox.getBoundingSphere(new THREE.Sphere()).radius;
     const vfov = THREE.MathUtils.degToRad(camera.fov);
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect);
-    return (r / Math.sin(Math.min(vfov, hfov) / 2)) * 0.82;
+    const minFov = Math.min(vfov, hfov);
+    const factor = window.innerWidth <= 768 ? 0.96 : 0.86;
+    return (r / Math.sin(minFov / 2)) * factor;
 }
 
 function computeHomeView() {
     const target = modelBox.getCenter(new THREE.Vector3());
-    target.y = modelBox.min.y + (modelBox.max.y - modelBox.min.y) * 0.35;
-    // Vista "del que la usa": desde el talón, arriba, levemente de costado
-    const dir = toe.clone().multiplyScalar(-1.0).add(new THREE.Vector3(0, 1.25, 0.55)).normalize();
+    target.y = (modelBox.min.y + modelBox.max.y) * 0.5 + 0.02;
+    // Perspectiva 3/4 hero: muestra la tira frontal con el escudo y el dorsal de frente
+    const dir = new THREE.Vector3(-0.65, 0.95, 1.25).normalize();
     return { target, dir };
 }
 
@@ -444,15 +456,31 @@ function goHome() {
     controls.update();
 }
 
+let prevW = 0, prevH = 0;
 function resize() {
     const { clientWidth: w, clientHeight: h } = stage;
     if (!w || !h) return;
+    const wasHidden = (prevW === 0 || prevH === 0);
+    prevW = w;
+    prevH = h;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    if (wasHidden && homeView) {
+        goHome();
+    }
 }
 new ResizeObserver(resize).observe(stage);
 resize();
+
+// Centrar inmediatamente al abrir el modal en móvil y frenar rotación automática
+window.addEventListener('finnta:studio-open', () => {
+    controls.autoRotate = false;
+    setTimeout(() => {
+        resize();
+        goHome();
+    }, 60);
+});
 
 // ---------------------------------------------------------------------
 //  CARGA DEL MODELO
@@ -710,33 +738,113 @@ $('text-rot').addEventListener('input', (e) => {
     buildDecal('text');
 });
 
-// Escudo
-function handleShieldFile(file) {
+// Conversión automática de cualquier formato de imagen a PNG transparente
+function convertFileToPng(file, applyRemoveWhite = true) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                const maxDim = 2048;
+                let w = img.naturalWidth || img.width || 512;
+                let h = img.naturalHeight || img.height || 512;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = w;
+                offCanvas.height = h;
+                const ctx = offCanvas.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(img, 0, 0, w, h);
+
+                if (applyRemoveWhite) {
+                    removeWhiteBackground(ctx, w, h);
+                }
+
+                offCanvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error('No se pudo generar PNG'));
+                        return;
+                    }
+                    const rawName = (file.name || 'escudo').replace(/\.[^/.]+$/, '');
+                    const pngFileName = `${rawName}-finnta.png`;
+                    const pngFile = new File([blob], pngFileName, { type: 'image/png' });
+                    const pngBlobUrl = URL.createObjectURL(blob);
+
+                    const convImg = new Image();
+                    convImg.onload = () => {
+                        resolve({
+                            pngFile,
+                            pngBlob: blob,
+                            img: convImg,
+                            url: pngBlobUrl,
+                            isConverted: file.type !== 'image/png'
+                        });
+                    };
+                    convImg.src = pngBlobUrl;
+                }, 'image/png');
+            };
+            img.onerror = () => reject(new Error('No se pudo decodificar la imagen'));
+            img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+        reader.readAsDataURL(file);
+    });
+}
+
+// Escudo: acepta cualquier imagen y la transforma a PNG
+async function handleShieldFile(file) {
     if (!file) return;
-    if (file.type !== 'image/png') {
-        toast('Solo se permiten imágenes en formato PNG.');
+    const isImage = (file.type && file.type.startsWith('image/')) || 
+                    /\.(png|jpe?g|webp|svg|bmp|avif|gif)$/i.test(file.name || '');
+    if (!isImage) {
+        toast('Por favor, seleccioná un archivo de imagen (JPG, PNG, WebP, etc.).');
         return;
     }
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-        state.shieldFile = file;
-        state.shieldImage = img;
+
+    toast('Procesando imagen y convirtiendo a PNG...');
+
+    try {
+        const res = await convertFileToPng(file, state.removeWhite);
+        state.originalShieldFile = file;
+        state.shieldFile = res.pngFile;
+        state.shieldImage = res.img;
         decals.shield.enabled = true;
         drawShield();
         buildDecal('shield');
         setActiveTarget('shield');
 
-        $('shield-thumb').src = url;
+        $('shield-thumb').src = res.url;
         $('shield-thumb').hidden = false;
         if ($('upload-icon')) $('upload-icon').style.display = 'none';
         $('upload-text').textContent = 'Cambiar imagen';
+        if ($('upload-subtext')) {
+            $('upload-subtext').textContent = res.isConverted ? 'Convertida a PNG · Lista para producción' : 'PNG listo para estampar';
+        }
+        if ($('png-badge')) {
+            $('png-badge').hidden = false;
+            $('png-badge').textContent = res.isConverted ? '✓ Convertida a PNG' : '✓ PNG Listo';
+        }
         $('shield-tools').hidden = false;
         $('shield-remove').hidden = false;
-        toast('¡Escudo estampado! Tocá la sandalia para moverlo.');
-    };
-    img.onerror = () => toast('No pudimos leer esa imagen. Asegurate de que sea un PNG válido.');
-    img.src = url;
+
+        if (res.isConverted) {
+            toast('¡Tu imagen fue transformada a PNG automáticamente!');
+        } else {
+            toast('¡Escudo estampado! Tocá la sandalia para moverlo.');
+        }
+    } catch (err) {
+        console.error('Error al procesar imagen:', err);
+        toast('No pudimos leer esa imagen. Probá con otra foto o formato.');
+    }
 }
 
 $('shield-upload').addEventListener('change', (e) => {
@@ -761,8 +869,18 @@ uploadLabel.addEventListener('drop', (e) => {
     }
 });
 
-$('remove-white').addEventListener('change', (e) => {
+$('remove-white').addEventListener('change', async (e) => {
     state.removeWhite = e.target.checked;
+    if (state.originalShieldFile) {
+        try {
+            const res = await convertFileToPng(state.originalShieldFile, state.removeWhite);
+            state.shieldFile = res.pngFile;
+            state.shieldImage = res.img;
+            $('shield-thumb').src = res.url;
+        } catch (err) {
+            console.warn(err);
+        }
+    }
     drawShield();
 });
 
@@ -776,15 +894,27 @@ $('shield-rot').addEventListener('input', (e) => {
     buildDecal('shield');
 });
 
+const shieldDownloadBtn = $('shield-download');
+if (shieldDownloadBtn) {
+    shieldDownloadBtn.addEventListener('click', () => {
+        if (!state.shieldFile) return;
+        downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-finnta.png');
+        toast('Descargando tu escudo en formato PNG 📥');
+    });
+}
+
 $('shield-remove').addEventListener('click', () => {
     state.shieldFile = null;
+    state.originalShieldFile = null;
     state.shieldImage = null;
     decals.shield.enabled = false;
     buildDecal('shield');
     $('shield-upload').value = '';
     $('shield-thumb').hidden = true;
     if ($('upload-icon')) $('upload-icon').style.display = '';
-    $('upload-text').textContent = 'Subir PNG';
+    $('upload-text').textContent = 'Subir imagen o escudo';
+    if ($('upload-subtext')) $('upload-subtext').textContent = 'JPG, PNG, WebP · Auto-conversión a PNG';
+    if ($('png-badge')) $('png-badge').hidden = true;
     $('shield-tools').hidden = true;
     $('shield-remove').hidden = true;
 });
@@ -862,6 +992,9 @@ $('order-btn').addEventListener('click', async () => {
 
     // Escritorio: descarga la vista previa y abre el chat del proveedor
     downloadBlob(blob, 'finnta-mi-diseno.png');
+    if (state.shieldFile) {
+        setTimeout(() => downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-finnta.png'), 400);
+    }
     const waText = `${message}\n\n(📎 Se descargó "finnta-mi-diseno.png", adjuntala en este chat${state.shieldFile ? ' junto con tu escudo' : ''})`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waText)}`, '_blank', 'noopener');
     toast('Se descargó tu diseño: adjuntalo en el chat de WhatsApp 📎');

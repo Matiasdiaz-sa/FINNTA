@@ -287,6 +287,7 @@ function openStudio() {
         // Forzar recalculo de dimensiones Three.js tras la animación de apertura
         setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
+            window.dispatchEvent(new CustomEvent('finnta:studio-open'));
         }, 100);
     } else {
         customizer.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -317,6 +318,16 @@ if (closeStudioBtn) {
         closeStudio();
     });
 }
+
+// Abrir estudio automáticamente si la URL tiene #personalizar
+if (window.location.hash === '#personalizar') {
+    setTimeout(openStudio, 150);
+}
+window.addEventListener('hashchange', () => {
+    if (window.location.hash === '#personalizar') {
+        openStudio();
+    }
+});
 
 // --- Lógica de Pasos Móvil (Estilo Nike By You) ---
 function setupMobileCustomizerSteps() {
@@ -373,6 +384,39 @@ function setupMobileCustomizerSteps() {
             switchStep(prevStep);
         });
     });
+
+    // Manejo interactivo de tarjetas de cantidad
+    const qtyCards = document.querySelectorAll('.qty-card');
+    const orderQtySelect = document.getElementById('order-qty');
+    qtyCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const val = card.getAttribute('data-qty');
+            qtyCards.forEach(c => c.classList.toggle('active', c === card));
+            if (orderQtySelect) {
+                orderQtySelect.value = val;
+                orderQtySelect.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
+    // Manejo de números rápidos para el dorsal
+    const numChips = document.querySelectorAll('.quick-num-btn');
+    const textInput = document.getElementById('custom-text-input');
+    numChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const num = chip.getAttribute('data-val');
+            numChips.forEach(c => c.classList.toggle('active', c === chip));
+            if (textInput) {
+                textInput.value = num;
+                textInput.dispatchEvent(new Event('input'));
+            }
+        });
+    });
+    if (textInput) {
+        textInput.addEventListener('input', () => {
+            numChips.forEach(c => c.classList.toggle('active', c.getAttribute('data-val') === textInput.value.trim()));
+        });
+    }
 }
 
 if (document.readyState === 'loading') {
