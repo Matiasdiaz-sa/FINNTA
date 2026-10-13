@@ -487,9 +487,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 180);
         }
 
-        // 4. Mover cámara del modelo 3D suavemente
-        model.cameraOrbit = data.orbit;
-        model.cameraTarget = data.target;
+        // 4. Mover cámara del modelo 3D suavemente (con margen extra en mobile para no cortar la punta/tira)
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            let mobileOrbit = data.orbit;
+            if (mobileOrbit.includes("100%")) {
+                mobileOrbit = mobileOrbit.replace("100%", "125%");
+            } else if (mobileOrbit.includes("110%")) {
+                mobileOrbit = mobileOrbit.replace("110%", "130%");
+            } else if (mobileOrbit.includes("115%")) {
+                mobileOrbit = mobileOrbit.replace("115%", "132%");
+            }
+            model.cameraOrbit = mobileOrbit;
+            model.cameraTarget = data.target;
+        } else {
+            model.cameraOrbit = data.orbit;
+            model.cameraTarget = data.target;
+        }
     }
 
     // Click en Tabs
