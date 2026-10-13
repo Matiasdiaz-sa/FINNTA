@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#ffffff">
     <title>Finnta | Pisá con Gambeta</title>
     <meta name="description" content="Sandalias personalizadas para clubes de fútbol. Diseñá tu par y llevá la pasión a cada paso.">
     
@@ -54,17 +55,48 @@
                     <button class="btn-primary">Empezar a personalizar</button>
                 </div>
                 
-                <div class="mask-visual">
+                <div class="mask-visual" id="hero-liquid-stage">
+                    <!-- SVG definitions para Máscara Líquida Orgánica / Lando Norris Fluid Effect -->
+                    <svg width="0" height="0" style="position: absolute; pointer-events: none;">
+                        <defs>
+                            <!-- Filtro de fluido orgánico: Gooey + Turbulencia de onda líquida submarina -->
+                            <filter id="underwater-fluid-filter" x="-30%" y="-30%" width="160%" height="160%">
+                                <!-- Fusión viscosa de fluidos (Metaball Gooey) -->
+                                <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" />
+                                <feColorMatrix in="blur" type="matrix" values="
+                                    1 0 0 0 0
+                                    0 1 0 0 0
+                                    0 0 1 0 0
+                                    0 0 0 25 -8" result="goo" />
+                                <!-- Ondulación líquida submarina (Water Ripple Noise) -->
+                                <feTurbulence type="fractalNoise" baseFrequency="0.015 0.015" numOctaves="2" seed="3" result="waterWave" />
+                                <feDisplacementMap in="goo" in2="waterWave" scale="18" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+                                <feBlend in="goo" in2="displaced" mode="multiply" />
+                            </filter>
+
+                            <mask id="liquid-color-mask" maskUnits="userSpaceOnUse" x="-500" y="-500" width="2000" height="2000">
+                                <g id="liquid-mask-container" filter="url(#underwater-fluid-filter)">
+                                    <!-- Estela de agua hidrodinámica: empuje frontal redondeado y cola que se va uniendo atrás -->
+                                    <path id="liquid-cursor-blob" d="" fill="#ffffff" />
+                                    <!-- Ondas y baldazos expansivos de pintura líquida limpios -->
+                                    <g id="liquid-paint-splashes" fill="#ffffff"></g>
+                                </g>
+                            </mask>
+                        </defs>
+                    </svg>
+
                     <img class="base-img" src="sandalia_negra_perspectiva_1.png" alt="Finnta Sandal Negra">
                     <div class="color-mask-wrapper">
                         <img class="color-overlay" src="sandalia_color_perspectiva_1.png" alt="Finnta Sandal Color">
                     </div>
+                    <!-- Canvas para ondas de agua y salpicaduras de pintura ("baldaso de pintura") -->
+                    <canvas class="liquid-ripple-canvas" id="liquid-ripple-canvas"></canvas>
                 </div>
             </div>
             
-            <!-- Football Wave & Text Path -->
+            <!-- Football Wave & Diagonal Section Split -->
             <div class="hero-bottom-decoration desktop-wave">
-                <svg class="hero-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+                <svg class="hero-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 360" preserveAspectRatio="none">
                     <defs>
                         <pattern id="pitchPattern" patternUnits="userSpaceOnUse" width="400" height="400">
                             <!-- Stripes for pitch -->
@@ -73,9 +105,19 @@
                             <!-- Grass texture overlay -->
                             <image href="grass_texture.jpg" x="0" y="0" width="400" height="400" preserveAspectRatio="none" style="mix-blend-mode: overlay; opacity: 0.85;" />
                         </pattern>
+                        <filter id="waveShadow" x="-10%" y="-10%" width="120%" height="150%">
+                            <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="rgba(0,0,0,0.14)" />
+                        </filter>
                     </defs>
-                    <path fill="url(#pitchPattern)" d="M 0 120 Q 360 20 720 120 T 1440 120 L 1440 240 Q 1080 340 720 240 T 0 240 Z" />
-                    <path id="textPath" fill="none" d="M 0 190 Q 360 90 720 190 T 1440 190 T 2160 190 T 2880 190 T 3600 190 T 4320 190 T 5040 190" />
+                    
+                    <!-- 1. Fondo del corte: sale DIRECTO desde el borde inferior de la onda hacia abajo hasta el final (#DFE6E0) -->
+                    <path class="wave-extended-bg" fill="#DFE6E0" d="M 0 280 Q 360 350 720 270 T 1440 190 L 1440 360 L 0 360 Z" />
+                    
+                    <!-- 2. Cinta ondeante con textura de cancha (la forma original natural, fluida y con la inclinación diagonal) -->
+                    <path class="wave-pitch-ribbon" filter="url(#waveShadow)" fill="url(#pitchPattern)" d="M 0 180 Q 360 250 720 170 T 1440 90 L 1440 190 Q 1080 190 720 270 T 0 280 Z" />
+                    
+                    <!-- 3. Línea de texto centrado en la cinta ondeante -->
+                    <path id="textPath" fill="none" d="M 0 230 Q 360 300 720 220 T 1440 140 T 2160 220 T 2880 140 T 3600 220 T 4320 140" />
                     <text font-family="'Outfit', sans-serif" font-size="28" font-weight="900" fill="#ffffff" letter-spacing="2">
                         <textPath href="#textPath" startOffset="0">
                             🏃‍♂️ PISÁ CON GAMBETA ⚽ • 👟 DISEÑO PREMIUM 🏟️ • 🇦🇷 TU CLUB. TU IDENTIDAD 🏆 • 🏃‍♂️ PISÁ CON GAMBETA ⚽ • 👟 DISEÑO PREMIUM 🏟️ • 🇦🇷 TU CLUB. TU IDENTIDAD 🏆 • 🏃‍♂️ PISÁ CON GAMBETA ⚽ • 👟 DISEÑO PREMIUM 🏟️ • 🇦🇷 TU CLUB. TU IDENTIDAD 🏆 • 🏃‍♂️ PISÁ CON GAMBETA ⚽ • 👟 DISEÑO PREMIUM 🏟️ • 🇦🇷 TU CLUB. TU IDENTIDAD 🏆
@@ -84,66 +126,192 @@
                     </text>
                 </svg>
             </div>
+        </section>
 
-            <div class="circular-badge mobile-badge">
-                <svg viewBox="0 0 200 200" width="160" height="160">
-                    <path id="circle-path" fill="none" d="M 100, 100 m -65, 0 a 65,65 0 1,1 130,0 a 65,65 0 1,1 -130,0"/>
-                    <circle cx="100" cy="100" r="45" fill="var(--accent-color)" />
-                    <text font-family="'Outfit', sans-serif" font-weight="900" font-size="15" fill="var(--text-primary)" letter-spacing="2">
-                        <textPath href="#circle-path" startOffset="0%" class="circle-text">
-                            DISEÑO PREMIUM • PISÁ CON GAMBETA • 
-                            <animate attributeName="startOffset" from="0%" to="100%" dur="15s" repeatCount="indefinite" />
-                        </textPath>
-                    </text>
-                    <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="32">⭐</text>
-                </svg>
+        <!-- Showcase Interactivo 3D FINNTA -->
+        <section id="detalles" class="showcase-section">
+            <div class="showcase-container">
+                
+                <!-- Header con identidad deportiva -->
+                <div class="showcase-header" data-aos="fade-up">
+                    <span class="showcase-pill">INGENIERÍA & PASIÓN</span>
+                    <h2 class="showcase-title">ANATOMÍA DE LA GAMBETA</h2>
+                    <p class="showcase-subtitle">
+                        Cada detalle diseñado para el descanso del deportista. Tocá los puntos o seleccioná una característica para rotar e inspeccionar en 360°.
+                    </p>
+                </div>
+
+                <div class="showcase-layout">
+                    <!-- Visor 3D Interactivo con Hotspots -->
+                    <div class="showcase-stage-wrap" data-aos="fade-right">
+                        <div class="showcase-ambient-glow"></div>
+                        <model-viewer 
+                            id="sandal-model"
+                            src="Meshy_AI_Black_Slide_Sandal_1009171551_texture.glb" 
+                            alt="Visión 3D interactiva del calzado FINNTA"
+                            camera-controls 
+                            touch-action="pan-y"
+                            shadow-intensity="1.8"
+                            shadow-softness="0.9"
+                            exposure="1.05"
+                            environment-image="neutral"
+                            camera-orbit="45deg 70deg 105%"
+                            interpolation-decay="150"
+                            class="showcase-model-viewer">
+
+                            <!-- Hotspots en el modelo -->
+                            <button class="showcase-hotspot active" slot="hotspot-sole" data-position="-0.22m 0.05m 0.02m" data-normal="0m 1m 0m" data-feature="sole" aria-label="Suela Anatómica">
+                                <span class="hotspot-pulse"></span>
+                                <span class="hotspot-core"></span>
+                                <span class="hotspot-tooltip">Suela Anatómica</span>
+                            </button>
+
+                            <button class="showcase-hotspot" slot="hotspot-strap" data-position="0.12m 0.22m 0.01m" data-normal="0m 1m 0m" data-feature="strap" aria-label="Capellada Reforzada">
+                                <span class="hotspot-pulse"></span>
+                                <span class="hotspot-core"></span>
+                                <span class="hotspot-tooltip">Capellada & Escudo</span>
+                            </button>
+
+                            <button class="showcase-hotspot" slot="hotspot-grip" data-position="-0.08m -0.22m -0.04m" data-normal="0m -1m 0m" data-feature="grip" aria-label="Tracción Antideslizante">
+                                <span class="hotspot-pulse"></span>
+                                <span class="hotspot-core"></span>
+                                <span class="hotspot-tooltip">Tracción Antideslizante</span>
+                            </button>
+                        </model-viewer>
+
+                        <div class="showcase-stage-badge">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                            </svg>
+                            <span>Arrastrá libremente para rotar en 360° · Rueda para zoom</span>
+                        </div>
+                    </div>
+
+                    <!-- Panel Interactivo de Detalles y Acciones -->
+                    <div class="showcase-info-panel" data-aos="fade-left">
+                        <!-- Navegación de Features -->
+                        <div class="feature-selector" role="tablist" aria-label="Partes de la sandalia">
+                            <button class="feature-tab-btn active" data-feature="sole" role="tab" aria-selected="true">
+                                <span class="tab-badge">01</span>
+                                <span class="tab-label">Suela Anatómica</span>
+                            </button>
+                            <button class="feature-tab-btn" data-feature="strap" role="tab" aria-selected="false">
+                                <span class="tab-badge">02</span>
+                                <span class="tab-label">Capellada & Escudo</span>
+                            </button>
+                            <button class="feature-tab-btn" data-feature="grip" role="tab" aria-selected="false">
+                                <span class="tab-badge">03</span>
+                                <span class="tab-label">Grip Antideslizante</span>
+                            </button>
+                            <button class="feature-tab-btn" data-feature="all" role="tab" aria-selected="false">
+                                <span class="tab-badge">04</span>
+                                <span class="tab-label">Vista 360° Total</span>
+                            </button>
+                        </div>
+
+                        <!-- Tarjeta de Contenido Dinámica -->
+                        <div class="feature-card">
+                            <div class="card-top-meta">
+                                <span class="card-highlight" id="feat-badge">CONFORT POST-PARTIDO</span>
+                                <span class="card-step-num" id="feat-number">01 / 04</span>
+                            </div>
+
+                            <h3 class="card-title" id="feat-title">Plantilla Ergonómica con Memoria</h3>
+                            <p class="card-desc" id="feat-desc">
+                                Inyección de EVA ultra liviana con densidad calibrada para absorber el impacto en talón y metatarso. El arco anatómico acompaña la pisada y acelera la recuperación post-partido.
+                            </p>
+
+                            <!-- Especificaciones clave en badges técnicos -->
+                            <div class="card-spec-grid" id="feat-specs">
+                                <div class="spec-box">
+                                    <span class="spec-k">MATERIAL</span>
+                                    <span class="spec-v">EVA Inyectada Pro</span>
+                                </div>
+                                <div class="spec-box">
+                                    <span class="spec-k">BENEFICIO</span>
+                                    <span class="spec-v">Descanso inmediato</span>
+                                </div>
+                            </div>
+
+                            <!-- Botón de conversión directa -->
+                            <div class="card-action-box">
+                                <button class="btn-primary showcase-order-btn" id="btn-showcase-order">
+                                    <span>Personalizar con los colores de mi club</span>
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                                <p class="card-sub-hint">Estampado HD indeleble · Venta minorista y mayorista</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
-        <!-- Product Features / 3D Real Display -->
-        <section id="detalles" class="features-section">
-            <div class="feature-grid">
-                <div class="feature-text" data-aos="fade-right">
-                    <h2>TU PASIÓN,<br>DESDE CADA ÁNGULO</h2>
-                    <p>Explorá el diseño de tu club en 3D real. Calidad premium, colores vibrantes y detalles pensados para llevar tu identidad a todos lados. Arrastrá para interactuar libremente.</p>
+        <!-- Corte de Línea Interactivo: Pelotas y Gambeta sobre el Borde de Sección -->
+        <!-- Corte de Línea Interactivo: Pelotas rodando sobre la curva de transición -->
+        <div class="page-cut-divider" id="edge-cutter-divider" title="Tocá para picar o cambiar de pelota">
+            <svg class="cut-wave-svg" viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Fondo superior #DFE6E0 que continúa el tono del visor 3D -->
+                <rect x="0" y="0" width="1440" height="80" fill="#DFE6E0"/>
+
+                <!-- Corte ondulado blanco (#ffffff) invertido -->
+                <path id="edge-cut-fill" d="M -40 45.36 Q -20 43.78 0 42 Q 360 10 720 42 T 1440 42 Q 1460 40.22 1480 38.64 L 1480 80 L -40 80 Z" fill="#ffffff"/>
+
+                <!-- Trayectoria guía matemática para la pelota (sin trazo visible) -->
+                <path id="edge-wave-path" d="M -40 45.36 Q -20 43.78 0 42 Q 360 10 720 42 T 1440 42 Q 1460 40.22 1480 38.64" fill="none" stroke="none"/>
+            </svg>
+
+            <!-- Partículas de césped sobre Canvas 2D ultra liviano -->
+            <canvas id="edge-particles-canvas" class="edge-particles-canvas"></canvas>
+
+            <!-- Pelota física HTML con aceleración GPU (mantiene relación de aspecto 1:1 circular en cualquier pantalla) -->
+            <div id="ball-actor" class="ball-actor">
+                <div id="ball-shadow" class="ball-shadow"></div>
+                <img id="ball-img" class="ball-img" src="imagenes/pelota_01_telstar_clasica.png" alt="Pelota Finnta" draggable="false" />
+            </div>
+        </div>
+
+        <!-- Mobile Studio Teaser (Visible únicamente en móvil para evitar acople de scroll) -->
+        <section class="mobile-studio-teaser" id="mobile-studio-teaser">
+            <div class="teaser-card">
+                <div class="teaser-badge">
+                    <span class="teaser-dot"></span>
+                    <span>ESTUDIO 3D EN VIVO</span>
                 </div>
-                <div class="feature-image model-container" data-aos="fade-left" data-aos-delay="200">
-                    <model-viewer 
-                        src="Meshy_AI_Black_Slide_Sandal_1009171551_texture.glb" 
-                        alt="Visión 3D real del calzado"
-                        auto-rotate
-                        rotation-per-second="30deg"
-                        camera-controls 
-                        shadow-intensity="1.2"
-                        shadow-softness="0.8"
-                        exposure="0.9"
-                        environment-image="neutral"
-                        disable-zoom
-                        class="model-3d">
-                    </model-viewer>
+                <h2>TU CLUB.<br>TUS COLORES.</h2>
+                <p>Configurá tu sandalia con vista 360° en tiempo real. Elegí el color de la tira, subí tu escudo grabado y poné tu número favorito.</p>
+                <div class="teaser-chips">
+                    <span class="chip-item">🎨 Color de tira</span>
+                    <span class="chip-item">🛡️ Escudo grabado</span>
+                    <span class="chip-item">🔟 Dorsal a elección</span>
                 </div>
+                <button type="button" class="btn-primary btn-open-studio" id="btn-open-studio-teaser">
+                    <span>Diseñar mi par en 3D</span>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+                <p class="teaser-caption">$45.000 ARS · Pedido directo por WhatsApp</p>
             </div>
         </section>
 
         <!-- Interactive Customizer -->
-        <section id="personalizar" class="customizer-section spa-mode">
+        <section id="personalizar" class="customizer-section">
             
-            <!-- Desktop Header -->
-            <div class="desktop-header customizer-header" data-aos="fade-up">
-                <h2>100% TU CLUB</h2>
-                <p>Subí tu escudo y se estampa en vivo sobre la sandalia 3D. Tocá la tira para ubicarlo donde quieras.</p>
+            <!-- Barra superior del Estudio (Exclusiva en móvil para volver sin acoples) -->
+            <div class="studio-topbar" id="studio-topbar">
+                <button type="button" class="studio-back-btn" id="btn-close-studio" aria-label="Volver a la tienda">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    <span>Volver</span>
+                </button>
+                <div class="studio-logo">FINNTA</div>
+                <div class="studio-badge-price">$45.000 ARS</div>
             </div>
 
-            <div class="spa-header">
-                <button class="btn-back" id="btn-close-customizer">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Volver
-                </button>
-                <div class="spa-logo">FINNTA</div>
-                <div class="spa-price">
-                    <span class="price-label">Precio estimado</span>
-                    <span class="price-value">$45.000 ARS</span>
-                </div>
+            <div class="customizer-header" data-aos="fade-up">
+                <h2>100% TU CLUB</h2>
+                <p>Subí tu escudo y se estampa en vivo sobre la sandalia 3D. Tocá la tira para ubicarlo donde quieras.</p>
             </div>
 
             <div class="spa-workspace customizer-workspace">
@@ -179,15 +347,29 @@
                         <p class="config-desc">Personalizá cada detalle. Tu diseño se renderiza en tiempo real.</p>
                     </div>
 
-                    <div class="control-group">
+                    <!-- Barra de Píldoras de Pasos para Móvil (Estilo Nike By You) -->
+                    <div class="mobile-steps-nav" id="mobile-steps-nav">
+                        <button type="button" class="step-pill-btn active" data-step="qty"><span class="step-num">1</span> Cantidad</button>
+                        <button type="button" class="step-pill-btn" data-step="color"><span class="step-num">2</span> Color</button>
+                        <button type="button" class="step-pill-btn" data-step="shield"><span class="step-num">3</span> Escudo</button>
+                        <button type="button" class="step-pill-btn" data-step="text"><span class="step-num">4</span> Número</button>
+                        <button type="button" class="step-pill-btn" data-step="order"><span class="step-num">5</span> Pedir</button>
+                    </div>
+
+                    <!-- Paso 1: Cantidad -->
+                    <div class="control-group mobile-active-step" data-step="qty" id="qty-group">
                         <label class="control-label">1. Cantidad</label>
                         <select id="order-qty" class="custom-input no-upper compact-select">
                             <option value="minorista">Menos de 100</option>
                             <option value="mayorista">+100 pares</option>
                         </select>
+                        <div class="step-nav-row">
+                            <button type="button" class="step-next-btn" data-next="color">Siguiente: Color de tira →</button>
+                        </div>
                     </div>
 
-                    <div class="control-group" id="color-group">
+                    <!-- Paso 2: Color Tira -->
+                    <div class="control-group" id="color-group" data-step="color">
                         <label class="control-label" id="color-heading">2. Color tira <span class="badge" id="color-badge">+100</span></label>
                         <div class="color-swatches disabled" id="base-swatches" style="opacity: 0.4; pointer-events: none;">
                             <button class="color-swatch active" data-color="original" data-name="Gris Oscuro" style="--sw:#444444"></button>
@@ -202,9 +384,14 @@
                             </div>
                         </div>
                         <span class="control-caption" id="base-name" hidden>Gris Oscuro</span>
+                        <div class="step-nav-row">
+                            <button type="button" class="step-prev-btn" data-prev="qty">← Cantidad</button>
+                            <button type="button" class="step-next-btn" data-next="shield">Siguiente: Escudo →</button>
+                        </div>
                     </div>
 
-                    <div class="control-group">
+                    <!-- Paso 3: Escudo -->
+                    <div class="control-group" id="shield-group" data-step="shield">
                         <label class="control-label" id="shield-heading">3. Escudo (Grabado)</label>
                         <div class="upload-box compact-upload">
                             <input type="file" id="shield-upload" accept="image/png" hidden>
@@ -227,9 +414,14 @@
                             </div>
                             <button class="link-btn" id="shield-remove" hidden>Quitar escudo</button>
                         </div>
+                        <div class="step-nav-row">
+                            <button type="button" class="step-prev-btn" data-prev="color">← Color</button>
+                            <button type="button" class="step-next-btn" data-next="text">Siguiente: Número / Texto →</button>
+                        </div>
                     </div>
 
-                    <div class="control-group text-group">
+                    <!-- Paso 4: Texto / Número -->
+                    <div class="control-group text-group" id="text-group" data-step="text">
                         <label class="control-label" id="text-heading">4. Texto / Número <span class="badge" id="text-badge">+100</span></label>
                         <input type="text" id="custom-text-input" class="custom-input compact-input" placeholder="Ej: 10" maxlength="10" value="10">
                         <div class="text-tools">
@@ -250,9 +442,15 @@
                                 <input type="range" id="text-rot" min="-180" max="180" step="1" value="0">
                             </div>
                         </div>
+                        <div class="step-nav-row">
+                            <button type="button" class="step-prev-btn" data-prev="shield">← Escudo</button>
+                            <button type="button" class="step-next-btn" data-next="order">Siguiente: Finalizar Pedido →</button>
+                        </div>
                     </div>
 
-                    <div class="control-group order-group">
+                    <!-- Paso 5: Pedido WhatsApp -->
+                    <div class="control-group order-group" id="order-group" data-step="order">
+                        <label class="control-label">5. Tus Datos y Talle</label>
                         <div style="display: flex; gap: 8px;">
                             <input type="text" id="order-name" class="custom-input no-upper compact-input" placeholder="Tu nombre" autocomplete="name">
                             <select id="order-size" class="custom-input compact-select">
@@ -261,10 +459,13 @@
                                 <option>41/42</option><option>43/44</option><option>45/46</option>
                             </select>
                         </div>
-                        <button class="btn-primary btn-whatsapp compact-btn" id="order-btn" style="margin-top: 8px; width: 100%;">
+                        <button class="btn-primary btn-whatsapp compact-btn" id="order-btn" style="margin-top: 10px; width: 100%;">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.8 5.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.81 11.81 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.82 11.82 0 0 0-3.48-8.413Z"/></svg>
                             Pedir por WhatsApp
                         </button>
+                        <div class="step-nav-row">
+                            <button type="button" class="step-prev-btn" data-prev="text" style="width: 100%;">← Volver a editar detalles</button>
+                        </div>
                     </div>
 
                 </div>
@@ -283,6 +484,7 @@
     </footer>
 
     <script src="script.js"></script>
+    <script src="ball-divider.js"></script>
     <script type="module" src="customizer.js"></script>
 
     <!-- AOS JS -->
