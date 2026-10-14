@@ -283,7 +283,10 @@ function openStudio() {
 
     if (window.innerWidth <= 768) {
         customizer.classList.add('studio-open');
+        document.body.classList.add('studio-open');
         document.body.style.overflow = 'hidden';
+        const divider = document.getElementById('edge-cutter-divider');
+        if (divider) divider.classList.add('studio-hidden');
         // Forzar recalculo de dimensiones Three.js tras la animación de apertura
         setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
@@ -299,7 +302,10 @@ function closeStudio() {
     if (customizer) {
         customizer.classList.remove('studio-open');
     }
+    document.body.classList.remove('studio-open');
     document.body.style.overflow = '';
+    const divider = document.getElementById('edge-cutter-divider');
+    if (divider) divider.classList.remove('studio-hidden');
 }
 
 // Escuchar todos los botones de acción para abrir el estudio

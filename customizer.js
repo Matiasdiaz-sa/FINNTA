@@ -419,12 +419,28 @@ function drawShield() {
 // ---------------------------------------------------------------------
 function applyBaseColor() {
     if (!baseMat) return;
-    if (state.baseColor === 'original') {
+    const isMayorista = state.quantity === 'mayorista';
+    if (!isMayorista) {
+        state.baseColor = 'original';
+        state.baseName = 'Gris Oscuro';
+        baseMat.color.set(0x444444);
+    } else if (state.baseColor === 'original') {
         baseMat.color.set(0x444444);
     } else {
         baseMat.color.set(state.baseColor);
     }
     baseMat.needsUpdate = true;
+
+    // Sincronizar estado visual del botón móvil y rueda
+    const statusDot = $('wheel-status-dot');
+    const statusName = $('wheel-status-name');
+    const previewSwatch = $('wheel-preview-swatch');
+    const previewHex = $('wheel-preview-hex');
+    const actualHex = (!isMayorista || state.baseColor === 'original') ? '#444444' : state.baseColor;
+    if (statusDot) statusDot.style.backgroundColor = actualHex;
+    if (statusName) statusName.textContent = !isMayorista ? 'Gris Oscuro (Estándar)' : (state.baseName || actualHex);
+    if (previewSwatch) previewSwatch.style.backgroundColor = actualHex;
+    if (previewHex) previewHex.textContent = actualHex.toUpperCase();
 }
 
 // ---------------------------------------------------------------------
@@ -639,6 +655,10 @@ function bindSwatches(containerId, onPick) {
 }
 
 bindSwatches('base-swatches', (color, name) => {
+    if (state.quantity !== 'mayorista') {
+        toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+        return;
+    }
     state.baseColor = color;
     state.baseName = name;
     $('base-name').textContent = name;
@@ -650,6 +670,10 @@ bindSwatches('base-swatches', (color, name) => {
 });
 
 $('base-color-picker').addEventListener('input', (e) => {
+    if (state.quantity !== 'mayorista') {
+        toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+        return;
+    }
     const wrap = $('base-swatches');
     wrap.querySelectorAll('.color-swatch').forEach((s) => s.classList.remove('active'));
     e.target.parentElement.classList.add('active');
@@ -661,44 +685,387 @@ $('base-color-picker').addEventListener('input', (e) => {
     applyBaseColor();
 });
 
-$('order-qty').addEventListener('change', (e) => {
-    state.quantity = e.target.value;
-    const isMayorista = state.quantity === 'mayorista';
+// =====================================================================
+//  RUEDA CROMÁTICA INTERACTIVA (Color Wheel Modal)
+// =====================================================================
+(function initColorWheel() {
+    const modal = document.getElementById('color-wheel-modal');
+    const backdrop = document.getElementById('color-wheel-backdrop');
+    const closeBtn = document.getElementById('color-wheel-close-btn');
+    const confirmBtn = document.getElementById('wheel-confirm-btn');
+    const canvasContainer = document.getElementById('color-wheel-canvas-container');
+    const canvas = document.getElementById('color-wheel-canvas');
+    const knob = document.getElementById('color-wheel-knob');
+    const brightnessSlider = document.getElementById('wheel-brightness-slider');
+    const brightnessVal = document.getElementById('wheel-val-percent');
+    const previewSwatch = document.getElementById('wheel-preview-swatch');
+    const previewHex = document.getElementById('wheel-preview-hex');
+    const mobileTrigger = document.getElementById('mobile-wheel-trigger-btn');
+    const quickDots = document.querySelectorAll('.wheel-quick-dot');
+
+    if (!modal || !canvas || !canvasContainer) return;
+
+    const ctx = canvas.getContext('2d');
+    const SIZE = 250;
+    const RADIUS = SIZE / 2;
+    const DPR = Math.min(window.devicePixelRatio || 2, 2);
+
+    canvas.width = SIZE * DPR;
+    canvas.height = SIZE * DPR;
+    ctx.scale(DPR, DPR);
+
+    // Canvas fuera de pantalla para rendimiento 60 FPS
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = SIZE * DPR;
+    offCanvas.height = SIZE * DPR;
+    const offCtx = offCanvas.getContext('2d');
+    offCtx.scale(DPR, DPR);
+
+    function renderBaseWheel() {
+        const totalW = SIZE * DPR;
+        const imgData = offCtx.createImageData(totalW, totalW);
+        const data = imgData.data;
+        const rActual = RADIUS * DPR;
+
+        for (let y = 0; y < totalW; y++) {
+            for (let x = 0; x < totalW; x++) {
+                const dx = x - rActual;
+                const dy = y - rActual;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const idx = (y * totalW + x) * 4;
+
+                if (dist <= rActual) {
+                    const sat = dist / rActual;
+                    const angle = Math.atan2(dy, dx);
+                    const hue = ((angle * 180 / Math.PI) + 360) % 360;
+
+                    // HSV con V = 1.0
+                    const f = (n, k = (n + hue / 60) % 6) => 1 - sat * Math.max(Math.min(k, 4 - k, 1), 0);
+                    data[idx] = Math.round(f(5) * 255);
+                    data[idx + 1] = Math.round(f(3) * 255);
+                    data[idx + 2] = Math.round(f(1) * 255);
+
+                    // Borde exterior suavizado (antialiasing)
+                    if (dist > rActual - 1.5) {
+                        data[idx + 3] = Math.round(Math.max(0, Math.min(1, rActual - dist)) * 255);
+                    } else {
+                        data[idx + 3] = 255;
+                    }
+                } else {
+                    data[idx + 3] = 0;
+                }
+            }
+        }
+        offCtx.putImageData(imgData, 0, 0);
+    }
+    renderBaseWheel();
+
+    let curHue = 0;
+    let curSat = 0;
+    let curVal = 1;
+    let isDragging = false;
+
+    function drawWheel() {
+        ctx.clearRect(0, 0, SIZE, SIZE);
+        ctx.drawImage(offCanvas, 0, 0, SIZE, SIZE);
+
+        // Capa de atenuación según el brillo (V)
+        if (curVal < 1) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(RADIUS, RADIUS, RADIUS - 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 0, 0, ${1 - curVal})`;
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function hsvToRgb(h, s, v) {
+        const f = (n, k = (n + h / 60) % 6) => v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
+        const r = Math.round(f(5) * 255);
+        const g = Math.round(f(3) * 255);
+        const b = Math.round(f(1) * 255);
+        const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+        return { r, g, b, hex };
+    }
+
+    function hexToRgb(hex) {
+        if (!hex || hex === 'original') return { r: 68, g: 68, b: 68 };
+        let clean = hex.replace('#', '');
+        if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+        const num = parseInt(clean, 16);
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function rgbToHsv(r, g, b) {
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const d = max - min;
+        let h = 0;
+        const s = max === 0 ? 0 : d / max;
+        const v = max;
+        if (d !== 0) {
+            if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+            else if (max === g) h = (b - r) / d + 2;
+            else h = (r - g) / d + 4;
+            h *= 60;
+        }
+        return { h, s, v };
+    }
+
+    function updateColorFromState(triggerModelUpdate = true, customName = null) {
+        const { hex } = hsvToRgb(curHue, curSat, curVal);
+        const pureHueSat = hsvToRgb(curHue, curSat, 1).hex;
+
+        // Posición del selector (knob)
+        const angle = curHue * Math.PI / 180;
+        const dist = curSat * RADIUS;
+        const kx = RADIUS + Math.cos(angle) * dist;
+        const ky = RADIUS + Math.sin(angle) * dist;
+        knob.style.left = `${kx}px`;
+        knob.style.top = `${ky}px`;
+        knob.style.backgroundColor = hex;
+
+        // Previsualizaciones
+        if (previewSwatch) previewSwatch.style.backgroundColor = hex;
+        if (previewHex) previewHex.textContent = hex.toUpperCase();
+
+        const statusDot = $('wheel-status-dot');
+        const statusName = $('wheel-status-name');
+        if (statusDot) statusDot.style.backgroundColor = hex;
+        if (statusName) statusName.textContent = customName || state.baseName || hex.toUpperCase();
+
+        // Barra de brillo
+        if (brightnessSlider) {
+            brightnessSlider.style.background = `linear-gradient(to right, #000000, ${pureHueSat})`;
+            brightnessSlider.value = Math.round(curVal * 100);
+        }
+        if (brightnessVal) {
+            brightnessVal.textContent = `${Math.round(curVal * 100)}%`;
+        }
+
+        // Actualizar sandalia 3D en tiempo real
+        if (triggerModelUpdate) {
+            state.baseColor = hex;
+            state.baseName = customName || "Personalizado";
+            const baseNameEl = $('base-name');
+            if (baseNameEl) baseNameEl.textContent = state.baseName;
+            applyBaseColor();
+        }
+    }
+
+    function handlePointer(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        let dx = clientX - (rect.left + RADIUS);
+        let dy = clientY - (rect.top + RADIUS);
+        let dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > RADIUS) {
+            dx = (dx / dist) * RADIUS;
+            dy = (dy / dist) * RADIUS;
+            dist = RADIUS;
+        }
+
+        curSat = Math.min(1, dist / RADIUS);
+        curHue = ((Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 360;
+
+        updateColorFromState(true);
+    }
+
+    canvasContainer.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        canvasContainer.setPointerCapture(e.pointerId);
+        handlePointer(e);
+    });
+
+    canvasContainer.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        handlePointer(e);
+    });
+
+    canvasContainer.addEventListener('pointerup', (e) => {
+        isDragging = false;
+        try { canvasContainer.releasePointerCapture(e.pointerId); } catch(err) {}
+    });
+
+    canvasContainer.addEventListener('pointercancel', () => {
+        isDragging = false;
+    });
+
+    if (brightnessSlider) {
+        brightnessSlider.addEventListener('input', (e) => {
+            curVal = parseFloat(e.target.value) / 100;
+            drawWheel();
+            updateColorFromState(true);
+        });
+    }
+
+    quickDots.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setColorByHex(btn.dataset.hex, true, btn.dataset.name || btn.getAttribute('title'));
+        });
+    });
+
+    function setColorByHex(hex, triggerModelUpdate = true, customName = null) {
+        const rgb = hexToRgb(hex);
+        const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
+        curHue = hsv.h;
+        curSat = hsv.s;
+        curVal = Math.max(0.1, hsv.v);
+
+        drawWheel();
+        updateColorFromState(triggerModelUpdate, customName);
+    }
+
+    function openModal() {
+        if (state.quantity !== 'mayorista') {
+            toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+            return;
+        }
+        setColorByHex(state.baseColor, false);
+        modal.removeAttribute('hidden');
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+            drawWheel();
+            updateColorFromState(false);
+        });
+    }
+
+    function closeModal() {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.setAttribute('hidden', '');
+        }, 280);
+    }
+
+    if (mobileTrigger) {
+        mobileTrigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (state.quantity !== 'mayorista') {
+                toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+                return;
+            }
+            openModal();
+        });
+    }
+
+    // En escritorio, al hacer clic sobre el wrapper de la rueda multicolor también abre la rueda interactiva
+    const desktopColorWrap = document.querySelector('#base-swatches .color-picker-wrapper');
+    if (desktopColorWrap) {
+        desktopColorWrap.addEventListener('click', (e) => {
+            if (state.quantity !== 'mayorista') {
+                e.preventDefault();
+                e.stopPropagation();
+                toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            openModal();
+        });
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+    if (confirmBtn) confirmBtn.addEventListener('click', closeModal);
+
+    // Sincronización inicial
+    applyBaseColor();
+})();
+
+function updateQuantityMode(isMayorista) {
     const swatches = $('base-swatches');
     const badge = $('color-badge');
     const heading = $('color-heading');
     const textBadge = $('text-badge');
     const textHeading = $('text-heading');
-    
+    const mobileBtn = $('mobile-wheel-trigger-btn');
+    const badgeText = $('wheel-badge-text');
+    const badgeIcon = $('wheel-badge-icon');
+    const modal = $('color-wheel-modal');
+
     if (isMayorista) {
-        swatches.classList.remove('disabled');
-        swatches.style.opacity = '1';
-        swatches.style.pointerEvents = 'auto';
-        $('text-swatches').style.opacity = '1';
-        $('text-swatches').style.pointerEvents = 'auto';
-        heading.classList.remove('disabled-text');
+        if (swatches) {
+            swatches.classList.remove('disabled');
+            swatches.style.opacity = '1';
+            swatches.style.pointerEvents = 'auto';
+        }
+        const textSwatches = $('text-swatches');
+        if (textSwatches) {
+            textSwatches.style.opacity = '1';
+            textSwatches.style.pointerEvents = 'auto';
+        }
+        if (heading) heading.classList.remove('disabled-text');
         if (textHeading) textHeading.classList.remove('disabled-text');
-        badge.style.display = 'none';
+        if (badge) badge.style.display = 'none';
         if (textBadge) textBadge.style.display = 'none';
-        $('shield-heading').textContent = '3. Escudo del equipo (Impresión a todo color)';
+        const shieldHeading = $('shield-heading');
+        if (shieldHeading) shieldHeading.textContent = '3. Escudo del equipo (Impresión a todo color)';
+
+        // Mobile button unlocked
+        if (mobileBtn) {
+            mobileBtn.classList.remove('locked');
+            if (badgeText) badgeText.textContent = 'Abrir rueda';
+            if (badgeIcon) badgeIcon.style.display = 'inline-block';
+        }
     } else {
-        swatches.classList.add('disabled');
-        swatches.style.opacity = '0.4';
-        swatches.style.pointerEvents = 'none';
-        $('text-swatches').style.opacity = '0.4';
-        $('text-swatches').style.pointerEvents = 'none';
-        heading.classList.add('disabled-text');
+        if (swatches) {
+            swatches.classList.add('disabled');
+            swatches.style.opacity = '0.4';
+            swatches.style.pointerEvents = 'none';
+        }
+        const textSwatches = $('text-swatches');
+        if (textSwatches) {
+            textSwatches.style.opacity = '0.4';
+            textSwatches.style.pointerEvents = 'none';
+        }
+        if (heading) heading.classList.add('disabled-text');
         if (textHeading) textHeading.classList.add('disabled-text');
-        badge.style.display = 'inline-block';
+        if (badge) badge.style.display = 'inline-block';
         if (textBadge) textBadge.style.display = 'inline-block';
-        $('shield-heading').textContent = '3. Escudo del equipo (Grabado sin color)';
-        if (state.baseColor !== 'original') {
-            swatches.querySelector('[data-color="original"]').click();
+        const shieldHeading = $('shield-heading');
+        if (shieldHeading) shieldHeading.textContent = '3. Escudo del equipo (Grabado sin color)';
+
+        // Mobile button locked
+        if (mobileBtn) {
+            mobileBtn.classList.add('locked');
+            if (badgeText) badgeText.textContent = '🔒 Solo +100 pares';
+            if (badgeIcon) badgeIcon.style.display = 'none';
+        }
+
+        // Close wheel modal if open
+        if (modal && modal.classList.contains('active')) {
+            modal.classList.remove('active');
+            setTimeout(() => modal.setAttribute('hidden', ''), 280);
+        }
+
+        // Reset base color to original
+        state.baseColor = 'original';
+        state.baseName = 'Gris Oscuro';
+        if (swatches) {
+            const origSwatch = swatches.querySelector('[data-color="original"]');
+            if (origSwatch) {
+                swatches.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                origSwatch.classList.add('active');
+            }
         }
     }
+
+    applyBaseColor();
     drawShield();
     drawText();
+}
+
+$('order-qty').addEventListener('change', (e) => {
+    state.quantity = e.target.value;
+    updateQuantityMode(state.quantity === 'mayorista');
 });
+
+// Sincronización inicial de cantidad
+updateQuantityMode(state.quantity === 'mayorista');
 
 bindSwatches('text-swatches', (color, name) => {
     state.textColor = color;
@@ -966,7 +1333,7 @@ $('order-btn').addEventListener('click', async () => {
         name ? `👤 Nombre: ${name}` : null,
         `👟 Talle: ${size}`,
         `📦 Cantidad: ${state.quantity === 'mayorista' ? '100 pares o más' : 'Menos de 100 pares'}`,
-        `🎨 Color de la tira: ${state.baseName}`,
+        `🎨 Color de la tira: ${state.quantity === 'mayorista' ? state.baseName : 'Gris Oscuro (Estándar - menos de 100 pares)'}`,
         `🛡️ Escudo: ${state.shieldFile ? `Sí (grabado)` : 'Sin escudo'}`,
         `🔤 Texto: ${text ? `${text} (color ${state.textColorName})` : 'Sin texto'}`,
         `💰 Precio estimado: ${PRICE_LABEL}`,

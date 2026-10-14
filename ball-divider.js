@@ -158,6 +158,7 @@
         // - De adelante: se frena o va para atrás
         // - De arriba: nada
         function handleInteraction(e) {
+            if (document.body.classList.contains('studio-open') || container.classList.contains('studio-hidden') || container.offsetParent === null) return;
             const rect = container.getBoundingClientRect();
             const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : rect.left + rect.width / 2);
             const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : rect.top + rect.height / 2);
@@ -213,6 +214,12 @@
             if (!lastTime) lastTime = now;
             const dt = Math.min((now - lastTime) / 1000, 0.033);
             lastTime = now;
+
+            // Si el estudio 3D está abierto o el contenedor está oculto, pausar para no interferir ni consumir GPU
+            if (!container || container.offsetParent === null || document.body.classList.contains('studio-open') || container.classList.contains('studio-hidden')) {
+                requestAnimationFrame(tick);
+                return;
+            }
 
             if (isVisible) {
                 const rect = container.getBoundingClientRect();
