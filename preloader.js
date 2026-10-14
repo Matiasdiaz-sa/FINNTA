@@ -34,7 +34,7 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, { passive: true });
 
-    if (pctEl) pctEl.textContent = '2%';
+    if (pctEl) pctEl.textContent = '1%';
 
     // Estado real de recursos
     let fontReady = false;
@@ -46,8 +46,9 @@
     let isOpening = false;
 
     // Progreso
-    let currentPercent = 0;
-    let targetPercent = 14; // Inicia inmediatamente para feedback visual instantáneo
+    let currentPercent = 1;
+    let targetPercent = 20; // Inicia con objetivo activo para acelerar desde el primer frame
+    let tickAccumulator = 0;
 
     const startTime = performance.now();
 
@@ -100,20 +101,20 @@
     function recalculateProgress() {
         if (isOpening) return;
 
-        let realSum = 12; // Base inicial de inicio
+        let realSum = 20; // Base inicial
         if (fontReady) realSum += 15;
         if (imagesTotal > 0) realSum += (imagesLoaded / imagesTotal) * 20;
         if (model3DReady) {
-            realSum += 35;
+            realSum += 30;
         } else {
-            realSum += (model3DProgress || 0) * 35;
+            realSum += (model3DProgress || 0) * 30;
         }
-        if (windowLoaded) realSum += 18;
+        if (windowLoaded) realSum += 15;
 
-        // Curva temporal de progreso mínimo suave (para que NUNCA se congele en red lenta)
+        // Curva temporal de progreso mínimo suave para no frenarse nunca
         const elapsed = (performance.now() - startTime) / 1000;
-        let timeFloor = 14;
-        if (elapsed > 0.05) timeFloor = Math.min(96, 14 + elapsed * 42);
+        let timeFloor = 20;
+        if (elapsed > 0.05) timeFloor = Math.min(98, 20 + elapsed * 38);
 
         targetPercent = Math.min(100, Math.max(targetPercent, Math.round(realSum), Math.round(timeFloor)));
 
@@ -122,7 +123,7 @@
             model3DReady &&
             windowLoaded;
 
-        if (isEverythingReady || targetPercent >= 99) {
+        if (isEverythingReady) {
             targetPercent = 100;
         }
     }
@@ -134,7 +135,7 @@
             return;
         }
         recalculateProgress();
-    }, 80);
+    }, 70);
 
     // Física de fluidos de pintura
     let time = 0;
@@ -157,19 +158,34 @@
     function updatePhysics(dt) {
         time += dt * 0.0022;
 
-        // Lerp ultra fluido hacia targetPercent
-        const diff = targetPercent - currentPercent;
-        if (Math.abs(diff) < 0.04) {
-            currentPercent = targetPercent;
+        // Aceleración dinámica SIN SALTEAR NÚMEROS:
+        // Va SIEMPRE del 1 al 100 de 1 en 1, modulando la velocidad según la carga
+        const distance = Math.max(0, targetPercent - currentPercent);
+        let msPerTick = 28; // Velocidad base constante por número
+
+        if (targetPercent >= 100) {
+            // Máxima aceleración cuando los recursos están listos: 1 número por frame
+            msPerTick = 10;
+        } else if (distance > 35) {
+            msPerTick = 13;
+        } else if (distance > 18) {
+            msPerTick = 18;
+        } else if (distance > 6) {
+            msPerTick = 24;
         } else {
-            const speed = diff > 20 ? 0.095 : 0.075;
-            currentPercent += diff * speed;
+            msPerTick = 32;
         }
 
-        // Nivel de pintura en Y (de abajo hacia arriba)
-        // 0% -> height + 20
-        // 100% -> -40 (cubre totalmente la pantalla)
-        const progressRatio = Math.max(0, Math.min(1, currentPercent / 100));
+        tickAccumulator += dt;
+        if (tickAccumulator >= msPerTick && currentPercent < 100) {
+            tickAccumulator = 0;
+            currentPercent += 1;
+        }
+
+        // Nivel de pintura en Y (de abajo hacia arriba, 100% sincronizado con currentPercent)
+        // 1% -> fondo de la pantalla (height)
+        // 100% -> cubre totalmente la pantalla (-40)
+        const progressRatio = currentPercent / 100;
         const waterY = height - ((height + 60) * progressRatio) + 20;
 
         // Gotas de pintura líquida cayendo
@@ -226,19 +242,18 @@
         }
 
         // Actualizar métricas en pantalla
-        const displayPct = Math.round(currentPercent);
-        if (pctEl) pctEl.textContent = `${displayPct}%`;
+        if (pctEl) pctEl.textContent = `${currentPercent}%`;
 
         if (statusEl) {
-            if (displayPct < 20) {
+            if (currentPercent < 20) {
                 statusEl.textContent = 'Iniciando vestuario…';
-            } else if (displayPct < 45) {
+            } else if (currentPercent < 45) {
                 statusEl.textContent = 'Cargando tipografías y colores de club…';
-            } else if (displayPct < 75) {
+            } else if (currentPercent < 75) {
                 statusEl.textContent = model3DReady
                     ? 'Texturas de césped y EVA listas…'
                     : 'Preparando sandalia 3D en la cancha…';
-            } else if (displayPct < 99) {
+            } else if (currentPercent < 99) {
                 statusEl.textContent = 'Calibrando personalizador oficial…';
             } else {
                 statusEl.textContent = '¡Cancha lista! Abriendo vestuario…';
@@ -246,7 +261,7 @@
         }
 
         // Disparo de apertura cuando se llena 100%
-        if (currentPercent >= 99.5 && targetPercent >= 100 && !isOpening) {
+        if (currentPercent >= 100 && !isOpening) {
             triggerOpening();
         }
 
