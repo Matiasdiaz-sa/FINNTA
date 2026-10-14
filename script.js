@@ -8,7 +8,7 @@ window.FinntaRealLoader = (function () {
 
     const pctEl = document.getElementById('real-preloader-pct');
     const statusEl = document.getElementById('real-preloader-status');
-    const liquidLevel = document.getElementById('paint-liquid-level');
+    const oceanEl = document.getElementById('screen-paint-ocean');
 
     // Estado real de recursos
     let fontReady = false;
@@ -114,10 +114,10 @@ window.FinntaRealLoader = (function () {
     function render(pct) {
         if (pctEl) pctEl.textContent = `${Math.round(pct)}%`;
 
-        if (liquidLevel) {
-            // Nivel de pintura: 145 = vacío (fondo), 0 = lleno al tope
-            const translateY = Math.max(0, 145 * (1 - (pct / 100)));
-            liquidLevel.setAttribute('transform', `translate(0, ${translateY.toFixed(1)})`);
+        if (oceanEl) {
+            // Sube la marea de pintura cubriendo toda la pantalla de abajo hacia arriba
+            const boundedPct = Math.min(100, Math.max(0, pct));
+            oceanEl.style.height = `${boundedPct}%`;
         }
 
         if (statusEl) {
@@ -159,15 +159,19 @@ window.FinntaRealLoader = (function () {
         isOpening = true;
         clearInterval(progressLoop);
 
-        // Breve pausa para que se vea el balde de pintura lleno al 100%
+        // Cuando la pantalla está 100% llena de pintura
+        if (oceanEl) oceanEl.style.height = '105%';
+        preloader.classList.add('preloader-filled');
+
+        // Pausa para apreciar la pantalla llena de pintura y luego apertura
         setTimeout(() => {
-            // Se abren las compuertas hacia los laterales como la salida a la cancha
+            // Se abren las cortinas de pintura hacia los laterales como salida a la cancha
             preloader.classList.add('preloader-opening');
 
             setTimeout(() => {
                 preloader.style.display = 'none';
             }, 880);
-        }, 320);
+        }, 380);
     }
 
     // Timeout de seguridad de 8s (por si una red corta o bloqueador frena un CDN externo)
