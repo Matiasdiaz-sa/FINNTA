@@ -149,7 +149,7 @@ shieldTexture.colorSpace = THREE.SRGBColorSpace;
 const decals = {
     shield: {
         mesh: null, point: null, normal: null,
-        baseSize: 0.24, scale: 1, rot: 0, aspect: 1,
+        baseSize: 0.32, scale: 1.2, rot: 0, aspect: 1,
         enabled: false, material: makeDecalMaterial(shieldTexture),
     },
     text: {
@@ -260,7 +260,7 @@ function keepFacing(geo, normal) {
             const i = (v + k) * 3;
             tmp.x += nor[i]; tmp.y += nor[i + 1]; tmp.z += nor[i + 2];
         }
-        if (tmp.normalize().dot(normal) < 0.2) continue;
+        if (tmp.normalize().dot(normal) < 0.02) continue;
         for (let k = 0; k < 3; k++) {
             const i = (v + k) * 3, j = (v + k) * 2;
             P.push(pos[i], pos[i + 1], pos[i + 2]);
@@ -285,7 +285,8 @@ function buildDecal(key) {
     if (!sandal || !d.enabled || !d.point) return;
 
     const w = d.baseSize * d.scale;
-    const size = new THREE.Vector3(w, w * d.aspect, DECAL_DEPTH);
+    const depth = Math.max(DECAL_DEPTH, w * 0.45);
+    const size = new THREE.Vector3(w, w * d.aspect, depth);
     const raw = new DecalGeometry(sandal, d.point, orientationFor(d.normal, d.rot), size);
     const geo = keepFacing(raw, d.normal);
     raw.dispose();
@@ -556,7 +557,10 @@ loader.load(
         const t = surfaceAt(textX, strap.cz);
         if (t) Object.assign(decals.text, t);
 
-        decals.shield.baseSize = THREE.MathUtils.clamp(strap.length * 0.45, 0.16, 0.3);
+        decals.shield.baseSize = THREE.MathUtils.clamp(strap.length * 0.60, 0.25, 0.45);
+        if ($('shield-size')) {
+            decals.shield.scale = parseFloat($('shield-size').value) || 1.2;
+        }
         const width = modelBox.max.z - modelBox.min.z;
         decals.text.baseSize = THREE.MathUtils.clamp(width * 0.55, 0.22, 0.42);
 
@@ -1222,6 +1226,9 @@ async function handleShieldFile(file) {
         state.originalShieldFile = file;
         state.shieldFile = res.pngFile;
         state.shieldImage = res.img;
+        if ($('shield-size')) {
+            decals.shield.scale = parseFloat($('shield-size').value) || 1.2;
+        }
         decals.shield.enabled = true;
         drawShield();
         buildDecal('shield');
@@ -1352,29 +1359,19 @@ function downloadBlob(blob, name) {
 
 $('order-btn').addEventListener('click', async () => {
     const nameEl = $('order-name');
-    const sizeEl = $('order-size');
-    const name = nameEl.value.trim();
-    const size = sizeEl.value;
-
-    if (!size) {
-        sizeEl.classList.add('invalid');
-        sizeEl.focus();
-        toast('Elegí tu talle para continuar');
-        setTimeout(() => sizeEl.classList.remove('invalid'), 1500);
-        return;
-    }
+    const name = nameEl ? nameEl.value.trim() : '';
 
     const text = state.text.trim().toUpperCase();
     const lines = [
         '⚽ ¡Hola Finnta! Quiero encargar el pedido para mi equipo:',
         '',
-        name ? `⚽ Capitán / Pedido a nombre de: ${name}` : null,
-        `👟 Talle de calzado: ${size}`,
+        name ? `⚽ Solicitado por: ${name}` : null,
         `📋 Plantel / Cantidad: ${state.quantity === 'mayorista' ? '100 pares o más (Mayorista)' : 'Menos de 100 pares (Minorista)'}`,
+        `👟 Curva de talles: A coordinar por WhatsApp`,
         `🎽 Color de tira: ${state.quantity === 'mayorista' ? state.baseName : 'Gris Oscuro (Estándar)'}`,
         `⚽ Escudo del Club: ${state.shieldFile ? 'Sí (grabado en relieve)' : 'Sin escudo'}`,
-        `🔟 Dorsal / Grabado: ${text ? `${text} (color ${state.textColorName})` : 'Sin dorsal'}`,
-        `💵 Presupuesto estimado: ${PRICE_LABEL}`,
+        `🔟 Dorsal / Grabado: ${text ? `${text}` : 'Sin dorsal'}`,
+        `💵 Presupuesto unitario: ${PRICE_LABEL}`,
         '',
         'Te adjunto la vista previa 3D de mi diseño.',
     ].filter((l) => l !== null);

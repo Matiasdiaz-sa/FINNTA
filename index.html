@@ -539,7 +539,7 @@
                             <div class="sliders-inline">
                                 <div class="slider-row mini-slider">
                                     <label for="shield-size">Tamaño</label>
-                                    <input type="range" id="shield-size" min="0.4" max="1.6" step="0.01" value="1">
+                                    <input type="range" id="shield-size" min="0.3" max="3.0" step="0.01" value="1.2">
                                 </div>
                                 <div class="slider-row mini-slider">
                                     <label for="shield-rot">Giro</label>
@@ -612,21 +612,13 @@
                     <div class="control-group order-group" id="order-group" data-step="order">
                         <div class="step-header">
                             <span class="step-badge-num" id="order-step-num">Paso 4</span>
-                            <h4 class="step-title">Tus Datos y Talle</h4>
+                            <h4 class="step-title">Tus Datos</h4>
                         </div>
                         <div class="order-inputs-grid">
                             <input type="text" id="order-name" class="custom-input no-upper compact-input"
-                                placeholder="Tu nombre" autocomplete="name">
-                            <select id="order-size" class="custom-input compact-select">
-                                <option value="">Elegí tu Talle</option>
-                                <option>35/36</option>
-                                <option>37/38</option>
-                                <option>39/40</option>
-                                <option>41/42</option>
-                                <option>43/44</option>
-                                <option>45/46</option>
-                            </select>
+                                placeholder="Tu nombre o Club" autocomplete="name">
                         </div>
+                        <p class="order-size-note">📋 La curva de talles se coordina directamente por WhatsApp.</p>
                         <button class="btn-primary btn-whatsapp" id="order-btn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="white"
                                 xmlns="http://www.w3.org/2000/svg">

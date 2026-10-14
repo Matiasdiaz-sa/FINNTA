@@ -1585,12 +1585,23 @@ body.studio-open .page-cut-divider,
     cursor: pointer;
 }
 
-/* Paso 5: Inputs de pedido y botón WhatsApp */
+/* Paso final: Inputs de pedido y botón WhatsApp */
 .order-inputs-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
-    margin: 0.5rem 0 1rem;
+    margin: 0.5rem 0 0.5rem;
+}
+
+.order-size-note {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0 0 0.85rem 0;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
 }
 
 .btn-whatsapp {
@@ -3600,9 +3611,14 @@ footer p {
 
     .order-inputs-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 10px;
-        margin: 4px 0;
+        margin: 4px 0 2px;
+    }
+
+    .order-size-note {
+        font-size: 0.78rem !important;
+        margin: 2px 0 8px 0 !important;
     }
 
     .btn-whatsapp {
