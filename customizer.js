@@ -623,7 +623,7 @@ canvas.addEventListener('pointerup', (e) => {
     d.normal = n;
 
     if (activeTarget === 'shield' && !state.shieldImage) {
-        toast('Primero subí la imagen de tu escudo 👉');
+        toast('Primero subí el escudo oficial de tu club ⚽');
     }
     buildDecal(activeTarget);
 });
@@ -656,7 +656,7 @@ function bindSwatches(containerId, onPick) {
 
 bindSwatches('base-swatches', (color, name) => {
     if (state.quantity !== 'mayorista') {
-        toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+        toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
         return;
     }
     state.baseColor = color;
@@ -671,7 +671,7 @@ bindSwatches('base-swatches', (color, name) => {
 
 $('base-color-picker').addEventListener('input', (e) => {
     if (state.quantity !== 'mayorista') {
-        toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+        toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
         return;
     }
     const wrap = $('base-swatches');
@@ -922,7 +922,7 @@ $('base-color-picker').addEventListener('input', (e) => {
 
     function openModal() {
         if (state.quantity !== 'mayorista') {
-            toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+            toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
             return;
         }
         setColorByHex(state.baseColor, false);
@@ -945,7 +945,7 @@ $('base-color-picker').addEventListener('input', (e) => {
         mobileTrigger.addEventListener('click', (e) => {
             e.preventDefault();
             if (state.quantity !== 'mayorista') {
-                toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+                toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
                 return;
             }
             openModal();
@@ -959,7 +959,7 @@ $('base-color-picker').addEventListener('input', (e) => {
             if (state.quantity !== 'mayorista') {
                 e.preventDefault();
                 e.stopPropagation();
-                toast('🔒 El color de tira personalizado solo se aplica a partir de 100 pares (Mayorista).');
+                toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
                 return;
             }
             e.preventDefault();
@@ -1008,7 +1008,7 @@ function updateQuantityMode(isMayorista) {
         // Mobile button unlocked
         if (mobileBtn) {
             mobileBtn.classList.remove('locked');
-            if (badgeText) badgeText.textContent = 'Abrir rueda';
+            if (badgeText) badgeText.innerHTML = '<span class="football-card green-card" aria-hidden="true"></span> Habilitado (+100)';
             if (badgeIcon) badgeIcon.style.display = 'inline-block';
         }
     } else {
@@ -1025,14 +1025,14 @@ function updateQuantityMode(isMayorista) {
         if (heading) heading.classList.add('disabled-text');
         if (textHeading) textHeading.classList.add('disabled-text');
         if (badge) badge.style.display = 'inline-block';
-        if (textBadge) textBadge.style.display = 'inline-block';
+        if (textBadge) textBadge.style.display = 'none';
         const shieldHeading = $('shield-heading');
         if (shieldHeading) shieldHeading.textContent = '3. Escudo del equipo (Grabado sin color)';
 
         // Mobile button locked
         if (mobileBtn) {
             mobileBtn.classList.add('locked');
-            if (badgeText) badgeText.textContent = '🔒 Solo +100 pares';
+            if (badgeText) badgeText.innerHTML = '<span class="football-card red-card" aria-hidden="true"></span> Tarjeta roja: +100 pares';
             if (badgeIcon) badgeIcon.style.display = 'none';
         }
 
@@ -1198,7 +1198,7 @@ async function handleShieldFile(file) {
         }
         if ($('png-badge')) {
             $('png-badge').hidden = false;
-            $('png-badge').textContent = res.isConverted ? '✓ Convertida a PNG' : '✓ PNG Listo';
+            $('png-badge').textContent = res.isConverted ? '⚽ Escudo Oficial PNG' : '⚽ Escudo Oficial';
         }
         $('shield-tools').hidden = false;
         $('shield-remove').hidden = false;
@@ -1266,7 +1266,7 @@ if (shieldDownloadBtn) {
     shieldDownloadBtn.addEventListener('click', () => {
         if (!state.shieldFile) return;
         downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-finnta.png');
-        toast('Descargando tu escudo en formato PNG 📥');
+        toast('Descargando el escudo oficial de tu club ⚽');
     });
 }
 
@@ -1328,15 +1328,15 @@ $('order-btn').addEventListener('click', async () => {
 
     const text = state.text.trim().toUpperCase();
     const lines = [
-        '¡Hola Finnta! 👋 Quiero encargar mi par personalizado:',
+        '⚽ ¡Hola Finnta! Quiero encargar el pedido para mi equipo:',
         '',
-        name ? `👤 Nombre: ${name}` : null,
-        `👟 Talle: ${size}`,
-        `📦 Cantidad: ${state.quantity === 'mayorista' ? '100 pares o más' : 'Menos de 100 pares'}`,
-        `🎨 Color de la tira: ${state.quantity === 'mayorista' ? state.baseName : 'Gris Oscuro (Estándar - menos de 100 pares)'}`,
-        `🛡️ Escudo: ${state.shieldFile ? `Sí (grabado)` : 'Sin escudo'}`,
-        `🔤 Texto: ${text ? `${text} (color ${state.textColorName})` : 'Sin texto'}`,
-        `💰 Precio estimado: ${PRICE_LABEL}`,
+        name ? `⚽ Capitán / Pedido a nombre de: ${name}` : null,
+        `👟 Talle de calzado: ${size}`,
+        `📋 Plantel / Cantidad: ${state.quantity === 'mayorista' ? '100 pares o más (Mayorista)' : 'Menos de 100 pares (Minorista)'}`,
+        `🎽 Color de tira: ${state.quantity === 'mayorista' ? state.baseName : 'Gris Oscuro (Estándar)'}`,
+        `⚽ Escudo del Club: ${state.shieldFile ? 'Sí (grabado en relieve)' : 'Sin escudo'}`,
+        `🔟 Dorsal / Grabado: ${text ? `${text} (color ${state.textColorName})` : 'Sin dorsal'}`,
+        `💵 Presupuesto estimado: ${PRICE_LABEL}`,
         '',
         'Te adjunto la vista previa 3D de mi diseño.',
     ].filter((l) => l !== null);
@@ -1364,7 +1364,7 @@ $('order-btn').addEventListener('click', async () => {
     }
     const waText = `${message}\n\n(📎 Se descargó "finnta-mi-diseno.png", adjuntala en este chat${state.shieldFile ? ' junto con tu escudo' : ''})`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waText)}`, '_blank', 'noopener');
-    toast('Se descargó tu diseño: adjuntalo en el chat de WhatsApp 📎');
+    toast('Se descargó la ficha técnica de tu diseño: adjuntala en WhatsApp ⚽');
 });
 
 // ---------------------------------------------------------------------

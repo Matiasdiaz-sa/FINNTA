@@ -1080,6 +1080,7 @@ body.studio-open .page-cut-divider,
     align-items: center;
     gap: 10px;
     margin-bottom: 0.85rem;
+    flex-wrap: nowrap;
 }
 
 .step-badge-num {
@@ -1091,6 +1092,12 @@ body.studio-open .page-cut-divider,
     padding: 3px 8px;
     border-radius: 999px;
     letter-spacing: 0.5px;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
 }
 
 .step-title {
@@ -1102,6 +1109,49 @@ body.studio-open .page-cut-divider,
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.step-title .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(220, 38, 38, 0.08);
+    color: #b91c1c;
+    border: 1px solid rgba(220, 38, 38, 0.22);
+    white-space: nowrap;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+/* --- Identidad Futbolera: Tarjetas de Juego (Roja y Verde) --- */
+.football-card {
+    display: inline-block;
+    width: 9px;
+    height: 13px;
+    border-radius: 1.5px;
+    vertical-align: -1.5px;
+    margin-right: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+    flex-shrink: 0;
+    position: relative;
+    transform: rotate(5deg);
+    transition: transform 0.2s ease;
+}
+
+.football-card.red-card {
+    background: #dc2626; /* Tarjeta Roja oficial FIFA */
+    border: 0.5px solid #b91c1c;
+}
+
+.football-card.green-card {
+    background: #16a34a; /* Habilitado en cancha */
+    border: 0.5px solid #15803d;
 }
 
 /* Paso 1: Selector Atlético de Cantidad (Minorista / Mayorista) */
@@ -3012,6 +3062,7 @@ footer p {
         align-items: center !important;
         gap: 8px !important;
         margin-bottom: 2px !important;
+        flex-wrap: nowrap !important;
     }
 
     .step-badge-num {
@@ -3020,9 +3071,15 @@ footer p {
         text-transform: uppercase !important;
         background: rgba(50, 168, 62, 0.12) !important;
         color: #1e7a2b !important;
-        padding: 2px 7px !important;
+        padding: 3px 8px !important;
         border-radius: 999px !important;
         letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
     }
 
     .step-title {
@@ -3030,6 +3087,9 @@ footer p {
         font-weight: 800 !important;
         color: var(--text-primary) !important;
         margin: 0 !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+        white-space: normal !important;
     }
 
     /* Selector atlético de cantidad (Minorista / Mayorista) */
@@ -3290,16 +3350,19 @@ footer p {
     }
 
     .mobile-wheel-trigger-btn.locked .wheel-btn-badge {
-        background: #f1f5f9;
-        color: #64748b;
-        border-color: #e2e8f0;
-        font-weight: 700;
+        background: rgba(220, 38, 38, 0.08);
+        color: #b91c1c;
+        border-color: rgba(220, 38, 38, 0.22);
+        font-weight: 800;
+        white-space: nowrap;
     }
 
     .mobile-wheel-trigger-btn:not(.locked) .wheel-btn-badge {
         background: rgba(46, 163, 60, 0.12);
         color: #1e7e2c;
         border-color: rgba(46, 163, 60, 0.28);
+        font-weight: 800;
+        white-space: nowrap;
     }
 
     .wheel-conic-icon {
