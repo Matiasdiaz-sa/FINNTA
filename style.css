@@ -38,6 +38,174 @@ a,
     touch-action: manipulation;
 }
 
+/* =========================================================================
+   PANTALLA DE CARGA INICIAL FINNTA (PRELOADER ATLÉTICO PREMIUM)
+   ========================================================================= */
+.finnta-preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #080b09;
+    background: radial-gradient(circle at 50% 45%, #101c13 0%, #060907 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.55s;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.finnta-preloader.loaded {
+    opacity: 0;
+    transform: translateY(-24px) scale(1.02);
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.preloader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 22px;
+    padding: 2rem;
+    max-width: 360px;
+    width: 90%;
+    animation: preloaderIn 0.5s ease-out;
+}
+
+@keyframes preloaderIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.preloader-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.preloader-logo {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #ffffff;
+    text-shadow: 0 0 24px rgba(46, 163, 60, 0.45);
+    line-height: 1;
+}
+
+.preloader-badge {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 3.5px;
+    color: #34B341;
+    text-transform: uppercase;
+}
+
+.preloader-ball-stage {
+    position: relative;
+    width: 82px;
+    height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preloader-ball-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px dashed rgba(46, 163, 60, 0.4);
+    animation: ringSpin 6s linear infinite;
+}
+
+@keyframes ringSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.preloader-ball-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #223a27 0%, #0d1710 100%);
+    border: 1.5px solid rgba(46, 163, 60, 0.5);
+    box-shadow: 0 0 24px rgba(46, 163, 60, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3cd84d;
+    animation: ballPulse 1.8s ease-in-out infinite alternate;
+}
+
+.preloader-ball-icon svg {
+    animation: ballSpin 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes ballPulse {
+    from { transform: scale(0.95); box-shadow: 0 0 14px rgba(46, 163, 60, 0.25); }
+    to { transform: scale(1.05); box-shadow: 0 0 28px rgba(46, 163, 60, 0.55); }
+}
+
+@keyframes ballSpin {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.preloader-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.preloader-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #2EA33C 0%, #3cd84d 60%, #ffffff 100%);
+    box-shadow: 0 0 12px rgba(46, 163, 60, 0.85);
+    border-radius: 999px;
+    transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.preloader-info {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.84rem;
+    color: #94a3b8;
+    gap: 12px;
+}
+
+.preloader-phrase {
+    color: #e2e8f0;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.2s ease;
+}
+
+.preloader-percent {
+    font-family: monospace;
+    font-weight: 800;
+    color: #34B341;
+    font-size: 0.92rem;
+    flex-shrink: 0;
+}
+
 @media (pointer: coarse) {
 
     input,

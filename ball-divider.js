@@ -37,13 +37,22 @@
         "imagenes/pelota_24_jabulani_sudafrica2010.png"
     ];
 
-    // Precargar todas las imágenes para cambios de balón instantáneos
+    // Carga progresiva diferida en tiempo ocioso (no satura ni compite con el inicio de la web)
     const preloadedImages = [];
-    BALL_FILES.forEach(src => {
-        const img = new Image();
-        img.src = src;
-        preloadedImages.push(img);
-    });
+    function preloadBallsInBackground() {
+        BALL_FILES.forEach(src => {
+            if (src.startsWith('data:')) return;
+            const img = new Image();
+            img.src = src;
+            preloadedImages.push(img);
+        });
+    }
+
+    if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(preloadBallsInBackground, { timeout: 3500 });
+    } else {
+        setTimeout(preloadBallsInBackground, 3000);
+    }
 
     let currentBallIdx = 0;
     let dist = 0;

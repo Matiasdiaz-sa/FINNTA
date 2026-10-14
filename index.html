@@ -32,14 +32,43 @@
         }
     }
     </script>
-
-    <!-- Model Viewer for 3D -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-
-    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+
+    <!-- Pantalla de Carga Inicial Finnta -->
+    <div id="finnta-preloader" class="finnta-preloader" aria-live="polite" role="status">
+        <div class="preloader-content">
+            <div class="preloader-brand">
+                <div class="preloader-logo">FINNTA</div>
+                <div class="preloader-badge">PISÁ CON GAMBETA</div>
+            </div>
+
+            <div class="preloader-ball-stage">
+                <div class="preloader-ball-ring"></div>
+                <div class="preloader-ball-icon">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="12 6 8.5 8.5 9.8 12.5 14.2 12.5 15.5 8.5"></polygon>
+                        <line x1="12" y1="2" x2="12" y2="6"></line>
+                        <line x1="2.2" y1="9.5" x2="5.5" y2="10.5"></line>
+                        <line x1="5.5" y1="17" x2="8.5" y2="15"></line>
+                        <line x1="18.5" y1="17" x2="15.5" y2="15"></line>
+                        <line x1="21.8" y1="9.5" x2="18.5" y2="10.5"></line>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="preloader-bar-wrap">
+                <div class="preloader-bar" id="preloader-bar"></div>
+            </div>
+
+            <div class="preloader-info">
+                <span class="preloader-phrase" id="preloader-phrase">Saliendo a la cancha…</span>
+                <span class="preloader-percent" id="preloader-percent">0%</span>
+            </div>
+        </div>
+    </div>
 
     <nav class="navbar">
         <div class="logo">FINNTA</div>
@@ -178,6 +207,7 @@
                         <div class="showcase-ambient-glow"></div>
                         <model-viewer id="sandal-model" src="Meshy_AI_Black_Slide_Sandal_1009171551_texture.glb"
                             alt="Visión 3D interactiva del calzado FINNTA" camera-controls touch-action="pan-y"
+                            loading="lazy" reveal="auto"
                             shadow-intensity="1.8" shadow-softness="0.9" exposure="1.05" environment-image="neutral"
                             camera-orbit="45deg 65deg 118%" camera-target="0m -0.02m 0m" interpolation-decay="150"
                             class="showcase-model-viewer">
@@ -726,6 +756,8 @@
         </div>
     </footer>
 
+    <!-- Model Viewer for 3D -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <script src="script.js"></script>
     <script src="ball-divider.js"></script>
     <script type="module" src="customizer.js"></script>

@@ -1,3 +1,107 @@
+// =========================================================================
+// PANTALLA DE CARGA INICIAL FINNTA (PRELOADER ATLÉTICO PREMIUM)
+// =========================================================================
+(function initFinntaPreloader() {
+    const preloader = document.getElementById('finnta-preloader');
+    if (!preloader) return;
+
+    const bar = document.getElementById('preloader-bar');
+    const percentEl = document.getElementById('preloader-percent');
+    const phraseEl = document.getElementById('preloader-phrase');
+
+    const phrases = [
+        { threshold: 0, text: 'Armando el vestuario…' },
+        { threshold: 25, text: 'Calibrando suela anatómica EVA…' },
+        { threshold: 55, text: 'Cargando detalles 3D y texturas…' },
+        { threshold: 82, text: 'Saliendo a la cancha…' },
+        { threshold: 100, text: '¡Listo para la gambeta!' }
+    ];
+
+    let currentProgress = 0;
+    let targetProgress = 15;
+    let isFinished = false;
+
+    function updateDisplay(p) {
+        const rounded = Math.min(100, Math.floor(p));
+        if (bar) bar.style.width = rounded + '%';
+        if (percentEl) percentEl.textContent = rounded + '%';
+
+        if (phraseEl) {
+            for (let i = phrases.length - 1; i >= 0; i--) {
+                if (rounded >= phrases[i].threshold) {
+                    if (phraseEl.textContent !== phrases[i].text) {
+                        phraseEl.style.opacity = '0';
+                        setTimeout(() => {
+                            phraseEl.textContent = phrases[i].text;
+                            phraseEl.style.opacity = '1';
+                        }, 100);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Intervalo de progreso fluido
+    const progressInterval = setInterval(() => {
+        if (currentProgress < targetProgress) {
+            const step = Math.max(1, (targetProgress - currentProgress) * 0.22);
+            currentProgress = Math.min(targetProgress, currentProgress + step);
+            updateDisplay(currentProgress);
+        }
+    }, 35);
+
+    const startTime = Date.now();
+    const MIN_DISPLAY_TIME = 1050; // Tiempo mínimo para que se aprecie la animación atlética
+
+    // Hitos de progreso mientras carga la página
+    setTimeout(() => { if (!isFinished) targetProgress = 38; }, 160);
+    setTimeout(() => { if (!isFinished) targetProgress = 68; }, 420);
+    setTimeout(() => { if (!isFinished) targetProgress = 88; }, 750);
+
+    function finishPreloader() {
+        if (isFinished) return;
+        const elapsed = Date.now() - startTime;
+        if (elapsed < MIN_DISPLAY_TIME) {
+            setTimeout(finishPreloader, MIN_DISPLAY_TIME - elapsed);
+            return;
+        }
+
+        isFinished = true;
+        targetProgress = 100;
+
+        const finishInterval = setInterval(() => {
+            currentProgress += (100 - currentProgress) * 0.45 + 3;
+            if (currentProgress >= 99.2) {
+                currentProgress = 100;
+                clearInterval(finishInterval);
+                clearInterval(progressInterval);
+                updateDisplay(100);
+
+                setTimeout(() => {
+                    preloader.classList.add('loaded');
+                    setTimeout(() => {
+                        preloader.style.display = 'none';
+                    }, 580);
+                }, 240);
+            } else {
+                updateDisplay(currentProgress);
+            }
+        }, 25);
+    }
+
+    if (document.readyState === 'complete') {
+        setTimeout(finishPreloader, 300);
+    } else {
+        window.addEventListener('load', () => {
+            setTimeout(finishPreloader, 250);
+        });
+    }
+
+    // Timeout de seguridad: jamás traba al usuario
+    setTimeout(finishPreloader, 2600);
+})();
+
 // --- Efecto Fluido Submarino (Estela de Agua Hidrodinámica & Impulso Elástico de Click Suave) ---
 (function initLiquidCursor() {
     const stage = document.getElementById('hero-liquid-stage');
