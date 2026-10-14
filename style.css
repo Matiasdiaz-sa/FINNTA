@@ -1544,40 +1544,7 @@ body.studio-open .page-cut-divider,
 
 .text-input-row .custom-input {
     flex: 1;
-}
-
-.quick-nums-row {
-    display: flex;
-    gap: 6px;
-    flex: 0 0 auto;
-}
-
-.quick-num-btn {
-    width: 44px;
-    height: 48px;
-    border-radius: 12px;
-    border: 1.5px solid rgba(0, 0, 0, 0.08);
-    background: #ffffff;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 800;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    touch-action: manipulation;
-}
-
-.quick-num-btn:hover {
-    border-color: #cbd5e1;
-}
-
-.quick-num-btn.active {
-    background: var(--accent-color);
-    color: #ffffff;
-    border-color: var(--accent-color);
-    box-shadow: 0 4px 12px rgba(50, 168, 62, 0.3);
+    width: 100%;
 }
 
 .sliders-inline {
@@ -3604,39 +3571,10 @@ footer p {
         margin: 4px 0;
     }
 
-    .text-input-row .compact-input {
+    .text-input-row .custom-input {
         flex: 1;
+        width: 100%;
         min-height: 44px;
-    }
-
-    .quick-nums-row {
-        display: flex;
-        gap: 5px;
-        flex: 0 0 auto;
-    }
-
-    .quick-num-btn {
-        width: 38px;
-        height: 44px;
-        border-radius: 10px;
-        border: 1.5px solid rgba(0, 0, 0, 0.08);
-        background: #f8faf8;
-        font-family: 'Outfit', sans-serif;
-        font-weight: 800;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        touch-action: manipulation;
-    }
-
-    .quick-num-btn.active {
-        background: var(--accent-color);
-        color: #ffffff;
-        border-color: var(--accent-color);
-        box-shadow: 0 3px 10px rgba(50, 168, 62, 0.3);
     }
 
     .order-inputs-grid {

@@ -404,25 +404,6 @@ function setupMobileCustomizerSteps() {
             }
         });
     });
-
-    // Manejo de números rápidos para el dorsal
-    const numChips = document.querySelectorAll('.quick-num-btn');
-    const textInput = document.getElementById('custom-text-input');
-    numChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            const num = chip.getAttribute('data-val');
-            numChips.forEach(c => c.classList.toggle('active', c === chip));
-            if (textInput) {
-                textInput.value = num;
-                textInput.dispatchEvent(new Event('input'));
-            }
-        });
-    });
-    if (textInput) {
-        textInput.addEventListener('input', () => {
-            numChips.forEach(c => c.classList.toggle('active', c.getAttribute('data-val') === textInput.value.trim()));
-        });
-    }
 }
 
 if (document.readyState === 'loading') {
