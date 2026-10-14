@@ -1113,45 +1113,11 @@ body.studio-open .page-cut-divider,
     flex: 1;
 }
 
-.step-title .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.68rem;
-    font-weight: 800;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: rgba(220, 38, 38, 0.08);
-    color: #b91c1c;
-    border: 1px solid rgba(220, 38, 38, 0.22);
-    white-space: nowrap;
-    flex-shrink: 0;
-    vertical-align: middle;
-}
-
-/* --- Identidad Futbolera: Tarjetas de Juego (Roja y Verde) --- */
-.football-card {
-    display: inline-block;
-    width: 9px;
-    height: 13px;
-    border-radius: 1.5px;
-    vertical-align: -1.5px;
-    margin-right: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
-    flex-shrink: 0;
-    position: relative;
-    transform: rotate(5deg);
-    transition: transform 0.2s ease;
-}
-
-.football-card.red-card {
-    background: #dc2626; /* Tarjeta Roja oficial FIFA */
-    border: 0.5px solid #b91c1c;
-}
-
-.football-card.green-card {
-    background: #16a34a; /* Habilitado en cancha */
-    border: 0.5px solid #15803d;
+/* Modo minorista: si son menos de 100 pares, no sale directamente la opción de color ni swatches de color de texto */
+.customizer-controls.minorista-mode #color-group,
+.customizer-controls.minorista-mode .step-pill-btn[data-step="color"],
+.customizer-controls.minorista-mode #text-swatches {
+    display: none !important;
 }
 
 /* Paso 1: Selector Atlético de Cantidad (Minorista / Mayorista) */
@@ -3349,15 +3315,7 @@ footer p {
         filter: grayscale(0.9) opacity(0.5);
     }
 
-    .mobile-wheel-trigger-btn.locked .wheel-btn-badge {
-        background: rgba(220, 38, 38, 0.08);
-        color: #b91c1c;
-        border-color: rgba(220, 38, 38, 0.22);
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .mobile-wheel-trigger-btn:not(.locked) .wheel-btn-badge {
+    .mobile-wheel-trigger-btn .wheel-btn-badge {
         background: rgba(46, 163, 60, 0.12);
         color: #1e7e2c;
         border-color: rgba(46, 163, 60, 0.28);

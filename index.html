@@ -344,7 +344,7 @@
                     <span>Volver</span>
                 </button>
                 <div class="studio-logo">FINNTA</div>
-                <div class="studio-badge-price">$45.000 ARS</div>
+                <div class="studio-badge-price">$25.000 ARS</div>
             </div>
 
             <div class="customizer-header" data-aos="fade-up">
@@ -384,7 +384,7 @@
                 </div>
 
                 <!-- CONTROLES -->
-                <div class="spa-controls customizer-controls">
+                <div class="spa-controls customizer-controls minorista-mode">
                     <div class="controls-intro">
                         <h3 class="config-title">Configuración</h3>
                         <p class="config-desc">Personalizá cada detalle. Tu diseño se renderiza en tiempo real.</p>
@@ -393,14 +393,14 @@
                     <!-- Barra de Pasos para Móvil (Distribuida al 100% sin cortes) -->
                     <div class="mobile-steps-nav" id="mobile-steps-nav">
                         <button type="button" class="step-pill-btn active" data-step="qty"><span
-                                class="step-num">1</span> Cant.</button>
-                        <button type="button" class="step-pill-btn" data-step="color"><span class="step-num">2</span>
+                                class="step-num" id="pill-num-qty">1</span> Cant.</button>
+                        <button type="button" class="step-pill-btn" data-step="color"><span class="step-num" id="pill-num-color">2</span>
                             Color</button>
-                        <button type="button" class="step-pill-btn" data-step="shield"><span class="step-num">3</span>
+                        <button type="button" class="step-pill-btn" data-step="shield"><span class="step-num" id="pill-num-shield">2</span>
                             Escudo</button>
-                        <button type="button" class="step-pill-btn" data-step="text"><span class="step-num">4</span>
+                        <button type="button" class="step-pill-btn" data-step="text"><span class="step-num" id="pill-num-text">3</span>
                             Dorsal</button>
-                        <button type="button" class="step-pill-btn" data-step="order"><span class="step-num">5</span>
+                        <button type="button" class="step-pill-btn" data-step="order"><span class="step-num" id="pill-num-order">4</span>
                             Pedir</button>
                     </div>
 
@@ -437,8 +437,8 @@
                             <option value="mayorista">+100 pares</option>
                         </select>
                         <div class="step-nav-row">
-                            <button type="button" class="step-next-btn btn-primary" data-next="color">
-                                <span>Siguiente: Color de tira</span>
+                            <button type="button" class="step-next-btn btn-primary" id="qty-next-btn" data-next="shield">
+                                <span id="qty-next-text">Siguiente: Escudo</span>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2.5">
                                     <path d="M5 12h14M12 5l7 7-7 7" />
@@ -447,16 +447,14 @@
                         </div>
                     </div>
 
-                    <!-- Paso 2: Color Tira -->
+                    <!-- Paso 2: Color Tira (Disponible para +100 pares) -->
                     <div class="control-group" id="color-group" data-step="color">
                         <div class="step-header">
-                            <span class="step-badge-num">Paso 2</span>
-                            <h4 class="step-title" id="color-heading">Color de tira <span class="badge"
-                                    id="color-badge"><span class="football-card red-card" aria-hidden="true"></span> +100 pares</span></h4>
+                            <span class="step-badge-num" id="color-step-num">Paso 2</span>
+                            <h4 class="step-title" id="color-heading">Color de tira</h4>
                         </div>
                         <div class="color-swatches-wrap">
-                            <div class="color-swatches disabled" id="base-swatches"
-                                style="opacity: 0.4; pointer-events: none;">
+                            <div class="color-swatches" id="base-swatches">
                                 <button class="color-swatch active" data-color="original" data-name="Gris Oscuro"
                                     style="--sw:#444444"></button>
                                 <button class="color-swatch" data-color="#f2f2ee" data-name="Blanca"
@@ -479,18 +477,18 @@
 
                         <!-- Botón selector Multicolor exclusivo en celular -->
                         <div class="mobile-wheel-trigger-wrap" id="mobile-wheel-trigger-wrap">
-                            <button type="button" class="mobile-wheel-trigger-btn locked" id="mobile-wheel-trigger-btn">
+                            <button type="button" class="mobile-wheel-trigger-btn" id="mobile-wheel-trigger-btn">
                                 <div class="wheel-conic-icon" id="wheel-btn-conic"></div>
                                 <div class="wheel-btn-info">
                                     <span class="wheel-btn-title">Elegir Color de Tira</span>
                                     <span class="wheel-btn-status">
                                         <span class="status-color-dot" id="wheel-status-dot"></span>
-                                        <span id="wheel-status-name">Gris Oscuro (Estándar)</span>
+                                        <span id="wheel-status-name">Gris Oscuro</span>
                                     </span>
                                 </div>
                                 <div class="wheel-btn-badge" id="wheel-btn-badge">
-                                    <span id="wheel-badge-text"><span class="football-card red-card" aria-hidden="true"></span> Tarjeta roja: +100 pares</span>
-                                    <svg id="wheel-badge-icon" style="display: none;" width="15" height="15"
+                                    <span id="wheel-badge-text">Personalizar</span>
+                                    <svg id="wheel-badge-icon" width="15" height="15"
                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="9 18 15 12 9 6"></polyline>
@@ -509,7 +507,7 @@
                     <!-- Paso 3: Escudo -->
                     <div class="control-group" id="shield-group" data-step="shield">
                         <div class="step-header">
-                            <span class="step-badge-num">Paso 3</span>
+                            <span class="step-badge-num" id="shield-step-num">Paso 2</span>
                             <h4 class="step-title" id="shield-heading">Escudo de tu club (Grabado)</h4>
                         </div>
                         <div class="upload-box compact-upload">
@@ -528,7 +526,7 @@
                                     <div class="upload-btn-text-wrap">
                                         <span id="upload-text" class="upload-title">Subir imagen o escudo</span>
                                         <span id="upload-subtext" class="upload-subtitle">JPG, PNG, WebP ·
-                                            Auto-conversión a PNG</span>
+                                             Auto-conversión a PNG</span>
                                     </div>
                                 </div>
                                 <span id="png-badge" class="png-badge" hidden>⚽ Escudo Oficial</span>
@@ -563,7 +561,7 @@
                             </div>
                         </div>
                         <div class="step-nav-row">
-                            <button type="button" class="step-prev-btn" data-prev="color">← Color</button>
+                            <button type="button" class="step-prev-btn" id="shield-prev-btn" data-prev="qty">← Cantidad</button>
                             <button type="button" class="step-next-btn btn-primary" data-next="text">Siguiente: Dorsal
                                 →</button>
                         </div>
@@ -572,7 +570,7 @@
                     <!-- Paso 4: Texto / Número -->
                     <div class="control-group text-group" id="text-group" data-step="text">
                         <div class="step-header">
-                            <span class="step-badge-num">Paso 4</span>
+                            <span class="step-badge-num" id="text-step-num">Paso 3</span>
                             <h4 class="step-title" id="text-heading">Número o Texto</h4>
                         </div>
                         <div class="text-input-row">
@@ -613,7 +611,7 @@
                     <!-- Paso 5: Pedido WhatsApp -->
                     <div class="control-group order-group" id="order-group" data-step="order">
                         <div class="step-header">
-                            <span class="step-badge-num">Paso 5</span>
+                            <span class="step-badge-num" id="order-step-num">Paso 4</span>
                             <h4 class="step-title">Tus Datos y Talle</h4>
                         </div>
                         <div class="order-inputs-grid">
@@ -635,7 +633,7 @@
                                 <path
                                     d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.8 5.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.81 11.81 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.82 11.82 0 0 0-3.48-8.413Z" />
                             </svg>
-                            <span>Pedir por WhatsApp · $45.000</span>
+                            <span>Pedir por WhatsApp · $25.000</span>
                         </button>
                         <div class="step-nav-row" style="margin-top: 6px;">
                             <button type="button" class="step-prev-btn" data-prev="text" style="width: 100%;">← Volver a

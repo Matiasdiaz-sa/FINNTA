@@ -345,6 +345,11 @@ function setupMobileCustomizerSteps() {
     function switchStep(targetStep) {
         if (!targetStep) return;
 
+        const controls = document.querySelector('.customizer-controls');
+        if (controls && controls.classList.contains('minorista-mode') && targetStep === 'color') {
+            targetStep = 'shield';
+        }
+
         // Actualizar píldoras
         pillButtons.forEach(btn => {
             const isMatch = btn.getAttribute('data-step') === targetStep;
@@ -369,6 +374,8 @@ function setupMobileCustomizerSteps() {
             if (textTargetBtn) textTargetBtn.click();
         }
     }
+
+    window.switchCustomizerStep = switchStep;
 
     pillButtons.forEach(btn => {
         btn.addEventListener('click', () => {

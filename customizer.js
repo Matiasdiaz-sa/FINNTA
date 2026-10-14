@@ -17,7 +17,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 // TODO: reemplazar por el número real del proveedor (formato internacional, sin + ni espacios)
 const WHATSAPP_NUMBER = '5491100000000';
 const MODEL_URL = 'Sin_nombre.glb';
-const PRICE_LABEL = '$45.000 ARS';
+const PRICE_LABEL = '$25.000 ARS';
 const DECAL_DEPTH = 0.12;            // profundidad de proyección (unidades del modelo)
 const TEXT_CANVAS = { w: 1024, h: 384 };
 
@@ -656,7 +656,7 @@ function bindSwatches(containerId, onPick) {
 
 bindSwatches('base-swatches', (color, name) => {
     if (state.quantity !== 'mayorista') {
-        toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
+        toast('El color de tira personalizado está disponible a partir de 100 pares (Mayorista).');
         return;
     }
     state.baseColor = color;
@@ -671,7 +671,7 @@ bindSwatches('base-swatches', (color, name) => {
 
 $('base-color-picker').addEventListener('input', (e) => {
     if (state.quantity !== 'mayorista') {
-        toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
+        toast('El color de tira personalizado está disponible a partir de 100 pares (Mayorista).');
         return;
     }
     const wrap = $('base-swatches');
@@ -922,7 +922,7 @@ $('base-color-picker').addEventListener('input', (e) => {
 
     function openModal() {
         if (state.quantity !== 'mayorista') {
-            toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
+            toast('El color de tira personalizado está disponible a partir de 100 pares (Mayorista).');
             return;
         }
         setColorByHex(state.baseColor, false);
@@ -945,7 +945,7 @@ $('base-color-picker').addEventListener('input', (e) => {
         mobileTrigger.addEventListener('click', (e) => {
             e.preventDefault();
             if (state.quantity !== 'mayorista') {
-                toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
+                toast('El color de tira personalizado está disponible a partir de 100 pares (Mayorista).');
                 return;
             }
             openModal();
@@ -959,7 +959,7 @@ $('base-color-picker').addEventListener('input', (e) => {
             if (state.quantity !== 'mayorista') {
                 e.preventDefault();
                 e.stopPropagation();
-                toast('🟥 Tarjeta roja: El color de tira es exclusivo para pedidos a partir de 100 pares (Mayorista).');
+                toast('El color de tira personalizado está disponible a partir de 100 pares (Mayorista).');
                 return;
             }
             e.preventDefault();
@@ -977,15 +977,29 @@ $('base-color-picker').addEventListener('input', (e) => {
 })();
 
 function updateQuantityMode(isMayorista) {
+    const controls = document.querySelector('.customizer-controls');
+    if (controls) {
+        controls.classList.toggle('minorista-mode', !isMayorista);
+    }
+
     const swatches = $('base-swatches');
-    const badge = $('color-badge');
     const heading = $('color-heading');
-    const textBadge = $('text-badge');
-    const textHeading = $('text-heading');
     const mobileBtn = $('mobile-wheel-trigger-btn');
     const badgeText = $('wheel-badge-text');
     const badgeIcon = $('wheel-badge-icon');
     const modal = $('color-wheel-modal');
+    const shieldHeading = $('shield-heading');
+    const textSwatches = $('text-swatches');
+
+    const shieldStepNum = $('shield-step-num');
+    const textStepNum = $('text-step-num');
+    const orderStepNum = $('order-step-num');
+    const pillShield = $('pill-num-shield');
+    const pillText = $('pill-num-text');
+    const pillOrder = $('pill-num-order');
+    const qtyNextBtn = $('qty-next-btn');
+    const qtyNextText = $('qty-next-text');
+    const shieldPrevBtn = $('shield-prev-btn');
 
     if (isMayorista) {
         if (swatches) {
@@ -993,22 +1007,35 @@ function updateQuantityMode(isMayorista) {
             swatches.style.opacity = '1';
             swatches.style.pointerEvents = 'auto';
         }
-        const textSwatches = $('text-swatches');
         if (textSwatches) {
+            textSwatches.classList.remove('disabled');
             textSwatches.style.opacity = '1';
             textSwatches.style.pointerEvents = 'auto';
         }
         if (heading) heading.classList.remove('disabled-text');
-        if (textHeading) textHeading.classList.remove('disabled-text');
-        if (badge) badge.style.display = 'none';
-        if (textBadge) textBadge.style.display = 'none';
-        const shieldHeading = $('shield-heading');
-        if (shieldHeading) shieldHeading.textContent = '3. Escudo del equipo (Impresión a todo color)';
+        if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club (A todo color)';
 
-        // Mobile button unlocked
+        // Numeración mayorista (+100 pares): 5 pasos
+        if (shieldStepNum) shieldStepNum.textContent = 'Paso 3';
+        if (textStepNum) textStepNum.textContent = 'Paso 4';
+        if (orderStepNum) orderStepNum.textContent = 'Paso 5';
+
+        if (pillShield) pillShield.textContent = '3';
+        if (pillText) pillText.textContent = '4';
+        if (pillOrder) pillOrder.textContent = '5';
+
+        if (qtyNextBtn) qtyNextBtn.setAttribute('data-next', 'color');
+        if (qtyNextText) qtyNextText.textContent = 'Siguiente: Color de tira';
+
+        if (shieldPrevBtn) {
+            shieldPrevBtn.setAttribute('data-prev', 'color');
+            shieldPrevBtn.textContent = '← Color';
+        }
+
+        // Mobile wheel trigger button habilitado
         if (mobileBtn) {
             mobileBtn.classList.remove('locked');
-            if (badgeText) badgeText.innerHTML = '<span class="football-card green-card" aria-hidden="true"></span> Habilitado (+100)';
+            if (badgeText) badgeText.textContent = 'Personalizar';
             if (badgeIcon) badgeIcon.style.display = 'inline-block';
         }
     } else {
@@ -1017,32 +1044,43 @@ function updateQuantityMode(isMayorista) {
             swatches.style.opacity = '0.4';
             swatches.style.pointerEvents = 'none';
         }
-        const textSwatches = $('text-swatches');
         if (textSwatches) {
+            textSwatches.classList.add('disabled');
             textSwatches.style.opacity = '0.4';
             textSwatches.style.pointerEvents = 'none';
         }
-        if (heading) heading.classList.add('disabled-text');
-        if (textHeading) textHeading.classList.add('disabled-text');
-        if (badge) badge.style.display = 'inline-block';
-        if (textBadge) textBadge.style.display = 'none';
-        const shieldHeading = $('shield-heading');
-        if (shieldHeading) shieldHeading.textContent = '3. Escudo del equipo (Grabado sin color)';
+        if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club (Grabado)';
 
-        // Mobile button locked
-        if (mobileBtn) {
-            mobileBtn.classList.add('locked');
-            if (badgeText) badgeText.innerHTML = '<span class="football-card red-card" aria-hidden="true"></span> Tarjeta roja: +100 pares';
-            if (badgeIcon) badgeIcon.style.display = 'none';
+        // Numeración minorista (<100 pares): 4 pasos directos
+        if (shieldStepNum) shieldStepNum.textContent = 'Paso 2';
+        if (textStepNum) textStepNum.textContent = 'Paso 3';
+        if (orderStepNum) orderStepNum.textContent = 'Paso 4';
+
+        if (pillShield) pillShield.textContent = '2';
+        if (pillText) pillText.textContent = '3';
+        if (pillOrder) pillOrder.textContent = '4';
+
+        if (qtyNextBtn) qtyNextBtn.setAttribute('data-next', 'shield');
+        if (qtyNextText) qtyNextText.textContent = 'Siguiente: Escudo';
+
+        if (shieldPrevBtn) {
+            shieldPrevBtn.setAttribute('data-prev', 'qty');
+            shieldPrevBtn.textContent = '← Cantidad';
         }
 
-        // Close wheel modal if open
+        // Cerrar modal de rueda si estuviera abierto
         if (modal && modal.classList.contains('active')) {
             modal.classList.remove('active');
             setTimeout(() => modal.setAttribute('hidden', ''), 280);
         }
 
-        // Reset base color to original
+        // Si estaba en el paso de color y pasó a minorista, redirigir a escudo
+        const activeColorStep = document.querySelector('#color-group.mobile-active-step');
+        if (activeColorStep && window.switchCustomizerStep) {
+            window.switchCustomizerStep('shield');
+        }
+
+        // Restablecer color de tira al original estándar (Gris Oscuro)
         state.baseColor = 'original';
         state.baseName = 'Gris Oscuro';
         if (swatches) {
