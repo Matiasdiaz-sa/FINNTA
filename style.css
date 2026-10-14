@@ -39,171 +39,253 @@ a,
 }
 
 /* =========================================================================
-   PANTALLA DE CARGA INICIAL FINNTA (PRELOADER ATLÉTICO PREMIUM)
+   PANTALLA DE CARGA FINNTA: BALDE DE PINTURA + APERTURA DE VESTUARIO
    ========================================================================= */
 .finnta-preloader {
     position: fixed;
     inset: 0;
     z-index: 99999;
-    background: #080b09;
-    background: radial-gradient(circle at 50% 45%, #101c13 0%, #060907 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.55s;
     overflow: hidden;
+    pointer-events: all;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.finnta-preloader.loaded {
+/* Compuertas de apertura (túnel de salida a la cancha) */
+.preloader-gate {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50.5%;
+    background: #070b08;
+    background: radial-gradient(circle at center, #0e1710 0%, #050806 100%);
+    z-index: 1;
+    transition: transform 0.85s cubic-bezier(0.77, 0, 0.175, 1);
+    will-change: transform;
+}
+
+.gate-left {
+    left: 0;
+    border-right: 1px solid rgba(46, 163, 60, 0.35);
+    box-shadow: 12px 0 35px rgba(0, 0, 0, 0.7);
+}
+
+.gate-right {
+    right: 0;
+    border-left: 1px solid rgba(46, 163, 60, 0.35);
+    box-shadow: -12px 0 35px rgba(0, 0, 0, 0.7);
+}
+
+.gate-edge-light {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2.5px;
+    background: linear-gradient(180deg, transparent 0%, #34B341 50%, transparent 100%);
+    box-shadow: 0 0 14px rgba(52, 179, 65, 0.8);
+    opacity: 0.9;
+}
+
+.gate-left .gate-edge-light { right: 0; }
+.gate-right .gate-edge-light { left: 0; }
+
+/* Animación de apertura: las compuertas se abren hacia los laterales */
+.finnta-preloader.preloader-opening .gate-left {
+    transform: translateX(-102%);
+}
+
+.finnta-preloader.preloader-opening .gate-right {
+    transform: translateX(102%);
+}
+
+.finnta-preloader.preloader-opening .preloader-stage {
     opacity: 0;
-    transform: translateY(-24px) scale(1.02);
-    visibility: hidden;
+    transform: scale(1.1) translateY(-16px);
+    transition: opacity 0.38s ease, transform 0.45s ease;
     pointer-events: none;
 }
 
-.preloader-content {
+/* Escenario central del balde */
+.preloader-stage {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    gap: 22px;
-    padding: 2rem;
-    max-width: 360px;
+    gap: 16px;
+    padding: 1.5rem;
+    max-width: 380px;
     width: 90%;
-    animation: preloaderIn 0.5s ease-out;
+    animation: stageFadeIn 0.5s ease-out;
 }
 
-@keyframes preloaderIn {
+@keyframes stageFadeIn {
     from { opacity: 0; transform: translateY(14px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.preloader-brand {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-
-.preloader-logo {
+.preloader-brand-title {
     font-family: 'Outfit', sans-serif;
     font-size: 2.5rem;
     font-weight: 900;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     color: #ffffff;
-    text-shadow: 0 0 24px rgba(46, 163, 60, 0.45);
+    text-shadow: 0 0 24px rgba(46, 163, 60, 0.5);
     line-height: 1;
 }
 
-.preloader-badge {
+.preloader-brand-sub {
     font-family: 'Outfit', sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 3.5px;
     color: #34B341;
     text-transform: uppercase;
+    margin-top: 4px;
 }
 
-.preloader-ball-stage {
+/* Contenedor del balde y chorro de pintura */
+.paint-bucket-wrap {
     position: relative;
-    width: 82px;
-    height: 82px;
+    width: 175px;
+    height: 205px;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 6px 0;
 }
 
-.preloader-ball-ring {
+.paint-pour-stream {
     position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 2px dashed rgba(46, 163, 60, 0.4);
-    animation: ringSpin 6s linear infinite;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 72px;
+    pointer-events: none;
+    z-index: 3;
 }
 
-@keyframes ringSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-.preloader-ball-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #223a27 0%, #0d1710 100%);
-    border: 1.5px solid rgba(46, 163, 60, 0.5);
-    box-shadow: 0 0 24px rgba(46, 163, 60, 0.35);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #3cd84d;
-    animation: ballPulse 1.8s ease-in-out infinite alternate;
-}
-
-.preloader-ball-icon svg {
-    animation: ballSpin 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes ballPulse {
-    from { transform: scale(0.95); box-shadow: 0 0 14px rgba(46, 163, 60, 0.25); }
-    to { transform: scale(1.05); box-shadow: 0 0 28px rgba(46, 163, 60, 0.55); }
-}
-
-@keyframes ballSpin {
-    0% { transform: rotate(0deg); }
-    50% { transform: rotate(180deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.preloader-bar-wrap {
-    width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 999px;
-    overflow: hidden;
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.preloader-bar {
+.paint-stream-core {
+    width: 5px;
+    margin: 0 auto;
     height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #2EA33C 0%, #3cd84d 60%, #ffffff 100%);
-    box-shadow: 0 0 12px rgba(46, 163, 60, 0.85);
+    background: linear-gradient(180deg, #48ec5b 0%, #34B341 65%, #228B22 100%);
     border-radius: 999px;
-    transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 12px rgba(72, 236, 91, 0.75);
+    animation: streamFlow 0.8s ease-in-out infinite alternate;
 }
 
-.preloader-info {
+@keyframes streamFlow {
+    from { transform: scaleX(0.85); opacity: 0.88; }
+    to { transform: scaleX(1.2); opacity: 1; }
+}
+
+.paint-drop {
+    position: absolute;
+    width: 4.5px;
+    height: 6.5px;
+    background: #48ec5b;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(72, 236, 91, 0.85);
+    opacity: 0;
+}
+
+.drop-1 {
+    left: 1px;
+    animation: dropFall 1.05s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+}
+
+.drop-2 {
+    right: 1px;
+    animation: dropFall 1.25s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite 0.35s;
+}
+
+@keyframes dropFall {
+    0% { top: 0; opacity: 1; transform: scale(1); }
+    80% { opacity: 0.9; }
+    100% { top: 68px; opacity: 0; transform: scale(0.6); }
+}
+
+.paint-bucket-svg {
     width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.7));
+}
+
+.bucket-handle {
+    transform-origin: 100px 78px;
+    animation: handleSway 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes handleSway {
+    from { transform: rotate(-2deg); }
+    to { transform: rotate(2deg); }
+}
+
+/* Ondulación de la pintura líquida */
+.liquid-wave-fg {
+    animation: waveSloshFg 2.2s linear infinite;
+}
+
+.liquid-wave-bg {
+    animation: waveSloshBg 3s linear infinite reverse;
+    opacity: 0.85;
+}
+
+.liquid-wave-foam {
+    animation: waveSloshFg 2.2s linear infinite;
+    opacity: 0.8;
+}
+
+@keyframes waveSloshFg {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-200px); }
+}
+
+@keyframes waveSloshBg {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-200px); }
+}
+
+.paint-liquid-level {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Métricas en tiempo real */
+.preloader-real-metrics {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.preloader-percent-num {
+    font-family: 'Outfit', monospace, sans-serif;
+    font-size: 1.95rem;
+    font-weight: 900;
+    color: #48ec5b;
+    text-shadow: 0 0 16px rgba(72, 236, 91, 0.55);
+    letter-spacing: 1px;
+    line-height: 1;
+}
+
+.preloader-status-msg {
     font-family: 'Outfit', sans-serif;
-    font-size: 0.84rem;
-    color: #94a3b8;
-    gap: 12px;
-}
-
-.preloader-phrase {
-    color: #e2e8f0;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: opacity 0.2s ease;
-}
-
-.preloader-percent {
-    font-family: monospace;
-    font-weight: 800;
-    color: #34B341;
-    font-size: 0.92rem;
-    flex-shrink: 0;
+    font-size: 0.88rem;
+    color: #cbd5e1;
+    font-weight: 500;
+    min-height: 1.3em;
+    letter-spacing: 0.4px;
+    transition: opacity 0.15s ease;
 }
 
 @media (pointer: coarse) {

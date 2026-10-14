@@ -1,105 +1,199 @@
 // =========================================================================
-// PANTALLA DE CARGA INICIAL FINNTA (PRELOADER ATLÉTICO PREMIUM)
+// PANTALLA DE CARGA REAL FINNTA: BALDE DE PINTURA + APERTURA DE VESTUARIO
+// (Monitorea carga real de texturas, fuentes, ventana y modelo 3D)
 // =========================================================================
-(function initFinntaPreloader() {
+window.FinntaRealLoader = (function () {
     const preloader = document.getElementById('finnta-preloader');
-    if (!preloader) return;
+    if (!preloader) return { onModelProgress: () => {}, onModelReady: () => {} };
 
-    const bar = document.getElementById('preloader-bar');
-    const percentEl = document.getElementById('preloader-percent');
-    const phraseEl = document.getElementById('preloader-phrase');
+    const pctEl = document.getElementById('real-preloader-pct');
+    const statusEl = document.getElementById('real-preloader-status');
+    const liquidLevel = document.getElementById('paint-liquid-level');
 
-    const phrases = [
-        { threshold: 0, text: 'Armando el vestuario…' },
-        { threshold: 25, text: 'Calibrando suela anatómica EVA…' },
-        { threshold: 55, text: 'Cargando detalles 3D y texturas…' },
-        { threshold: 82, text: 'Saliendo a la cancha…' },
-        { threshold: 100, text: '¡Listo para la gambeta!' }
+    // Estado real de recursos
+    let fontReady = false;
+    let imagesTotal = 0;
+    let imagesLoaded = 0;
+    let model3DProgress = 0; // 0.0 a 1.0
+    let model3DReady = false;
+    let windowLoaded = false;
+    let isOpening = false;
+
+    let targetPercent = 5;
+    let currentPercent = 0;
+
+    // 1. Fuentes tipográficas de Google Fonts
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+            fontReady = true;
+            recalculateRealProgress();
+        }).catch(() => {
+            fontReady = true;
+            recalculateRealProgress();
+        });
+    } else {
+        fontReady = true;
+    }
+
+    // 2. Texturas e imágenes críticas de la portada
+    const criticalImages = [
+        'sandalia_negra_perspectiva_1.png',
+        'sandalia_color_perspectiva_1.png',
+        'grass_texture.jpg',
+        'imagenes/pelota_telstar_pro.png'
     ];
+    imagesTotal = criticalImages.length;
 
-    let currentProgress = 0;
-    let targetProgress = 15;
-    let isFinished = false;
+    criticalImages.forEach((src) => {
+        const img = new Image();
+        img.onload = img.onerror = () => {
+            imagesLoaded++;
+            recalculateRealProgress();
+        };
+        img.src = src;
+    });
 
-    function updateDisplay(p) {
-        const rounded = Math.min(100, Math.floor(p));
-        if (bar) bar.style.width = rounded + '%';
-        if (percentEl) percentEl.textContent = rounded + '%';
-
-        if (phraseEl) {
-            for (let i = phrases.length - 1; i >= 0; i--) {
-                if (rounded >= phrases[i].threshold) {
-                    if (phraseEl.textContent !== phrases[i].text) {
-                        phraseEl.style.opacity = '0';
-                        setTimeout(() => {
-                            phraseEl.textContent = phrases[i].text;
-                            phraseEl.style.opacity = '1';
-                        }, 100);
-                    }
-                    break;
-                }
-            }
-        }
+    // 3. Model-viewer del showcase
+    const showcaseModel = document.getElementById('sandal-model');
+    let showcaseReady = !showcaseModel;
+    if (showcaseModel) {
+        showcaseModel.addEventListener('load', () => {
+            showcaseReady = true;
+            recalculateRealProgress();
+        }, { once: true });
+        showcaseModel.addEventListener('error', () => {
+            showcaseReady = true;
+            recalculateRealProgress();
+        }, { once: true });
     }
 
-    // Intervalo de progreso fluido
-    const progressInterval = setInterval(() => {
-        if (currentProgress < targetProgress) {
-            const step = Math.max(1, (targetProgress - currentProgress) * 0.22);
-            currentProgress = Math.min(targetProgress, currentProgress + step);
-            updateDisplay(currentProgress);
-        }
-    }, 35);
-
-    const startTime = Date.now();
-    const MIN_DISPLAY_TIME = 1050; // Tiempo mínimo para que se aprecie la animación atlética
-
-    // Hitos de progreso mientras carga la página
-    setTimeout(() => { if (!isFinished) targetProgress = 38; }, 160);
-    setTimeout(() => { if (!isFinished) targetProgress = 68; }, 420);
-    setTimeout(() => { if (!isFinished) targetProgress = 88; }, 750);
-
-    function finishPreloader() {
-        if (isFinished) return;
-        const elapsed = Date.now() - startTime;
-        if (elapsed < MIN_DISPLAY_TIME) {
-            setTimeout(finishPreloader, MIN_DISPLAY_TIME - elapsed);
-            return;
-        }
-
-        isFinished = true;
-        targetProgress = 100;
-
-        const finishInterval = setInterval(() => {
-            currentProgress += (100 - currentProgress) * 0.45 + 3;
-            if (currentProgress >= 99.2) {
-                currentProgress = 100;
-                clearInterval(finishInterval);
-                clearInterval(progressInterval);
-                updateDisplay(100);
-
-                setTimeout(() => {
-                    preloader.classList.add('loaded');
-                    setTimeout(() => {
-                        preloader.style.display = 'none';
-                    }, 580);
-                }, 240);
-            } else {
-                updateDisplay(currentProgress);
-            }
-        }, 25);
-    }
-
+    // 4. Fin de carga del DOM y scripts
     if (document.readyState === 'complete') {
-        setTimeout(finishPreloader, 300);
+        windowLoaded = true;
     } else {
         window.addEventListener('load', () => {
-            setTimeout(finishPreloader, 250);
-        });
+            windowLoaded = true;
+            recalculateRealProgress();
+        }, { once: true });
     }
 
-    // Timeout de seguridad: jamás traba al usuario
-    setTimeout(finishPreloader, 2600);
+    function recalculateRealProgress() {
+        if (isOpening) return;
+
+        // Ponderación real:
+        // Fuentes: 10%
+        // Imágenes críticas: 25% (6.25% c/u)
+        // Modelo 3D Three.js: 45% (stream XHR en vivo)
+        // Showcase 3D: 10%
+        // Window Load (CSS + DOM + scripts): 10%
+        let realSum = 0;
+        if (fontReady) realSum += 10;
+        if (imagesTotal > 0) realSum += (imagesLoaded / imagesTotal) * 25;
+        if (model3DReady) {
+            realSum += 45;
+        } else {
+            realSum += model3DProgress * 45;
+        }
+        if (showcaseReady) realSum += 10;
+        if (windowLoaded) realSum += 10;
+
+        targetPercent = Math.min(100, Math.max(targetPercent, Math.round(realSum)));
+
+        const isEverythingReady = fontReady &&
+            (imagesLoaded >= imagesTotal) &&
+            model3DReady &&
+            showcaseReady &&
+            windowLoaded;
+
+        if (isEverythingReady) {
+            targetPercent = 100;
+        }
+    }
+
+    // Render del nivel de líquido y texto
+    function render(pct) {
+        if (pctEl) pctEl.textContent = `${Math.round(pct)}%`;
+
+        if (liquidLevel) {
+            // Nivel de pintura: 145 = vacío (fondo), 0 = lleno al tope
+            const translateY = Math.max(0, 145 * (1 - (pct / 100)));
+            liquidLevel.setAttribute('transform', `translate(0, ${translateY.toFixed(1)})`);
+        }
+
+        if (statusEl) {
+            if (pct < 15) {
+                statusEl.textContent = 'Armando el vestuario…';
+            } else if (pct < 35) {
+                statusEl.textContent = 'Cargando tipografías de club…';
+            } else if (pct < 80) {
+                if (!model3DReady && model3DProgress > 0) {
+                    statusEl.textContent = `Descargando sandalia 3D (${Math.round(model3DProgress * 100)}%)…`;
+                } else {
+                    statusEl.textContent = 'Preparando texturas de césped y goma EVA…';
+                }
+            } else if (pct < 99) {
+                statusEl.textContent = 'Calibrando personalizador en la cancha…';
+            } else {
+                statusEl.textContent = '¡Cancha lista! Abriendo vestuario…';
+            }
+        }
+    }
+
+    // Animación fluida de subida del nivel de pintura
+    const progressLoop = setInterval(() => {
+        if (currentPercent < targetPercent) {
+            const step = Math.max(0.6, (targetPercent - currentPercent) * 0.25);
+            currentPercent = Math.min(targetPercent, currentPercent + step);
+            render(currentPercent);
+        }
+
+        if (currentPercent >= 99.5 && targetPercent >= 100 && !isOpening) {
+            currentPercent = 100;
+            render(100);
+            triggerOpening();
+        }
+    }, 28);
+
+    function triggerOpening() {
+        if (isOpening) return;
+        isOpening = true;
+        clearInterval(progressLoop);
+
+        // Breve pausa para que se vea el balde de pintura lleno al 100%
+        setTimeout(() => {
+            // Se abren las compuertas hacia los laterales como la salida a la cancha
+            preloader.classList.add('preloader-opening');
+
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 880);
+        }, 320);
+    }
+
+    // Timeout de seguridad de 8s (por si una red corta o bloqueador frena un CDN externo)
+    setTimeout(() => {
+        if (!isOpening) {
+            fontReady = true;
+            model3DReady = true;
+            showcaseReady = true;
+            windowLoaded = true;
+            imagesLoaded = imagesTotal;
+            targetPercent = 100;
+            triggerOpening();
+        }
+    }, 8000);
+
+    return {
+        onModelProgress(ratio) {
+            model3DProgress = Math.min(1, Math.max(0, ratio));
+            recalculateRealProgress();
+        },
+        onModelReady() {
+            model3DReady = true;
+            model3DProgress = 1;
+            recalculateRealProgress();
+        }
+    };
 })();
 
 // --- Efecto Fluido Submarino (Estela de Agua Hidrodinámica & Impulso Elástico de Click Suave) ---

@@ -574,13 +574,25 @@ loader.load(
         applyBaseColor();
 
         loaderEl.classList.add('hidden');
+        if (window.FinntaRealLoader) {
+            window.FinntaRealLoader.onModelReady();
+        }
     },
     (xhr) => {
-        if (xhr.total) loaderText.textContent = `Cargando tu sandalia 3D… ${Math.round((xhr.loaded / xhr.total) * 100)}%`;
+        if (xhr.total) {
+            const ratio = xhr.loaded / xhr.total;
+            loaderText.textContent = `Cargando tu sandalia 3D… ${Math.round(ratio * 100)}%`;
+            if (window.FinntaRealLoader) {
+                window.FinntaRealLoader.onModelProgress(ratio);
+            }
+        }
     },
     (err) => {
         console.error(err);
         showLoaderError('No se pudo cargar el modelo 3D. Abrí la página con un servidor local (ej: Live Server).');
+        if (window.FinntaRealLoader) {
+            window.FinntaRealLoader.onModelReady(); // Fallback so loader continues
+        }
     }
 );
 

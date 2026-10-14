@@ -36,36 +36,107 @@
 
 <body>
 
-    <!-- Pantalla de Carga Inicial Finnta -->
+    <!-- Pantalla de Carga Inicial Finnta: Balde de Pintura + Apertura de Vestuario -->
     <div id="finnta-preloader" class="finnta-preloader" aria-live="polite" role="status">
-        <div class="preloader-content">
+        <!-- Paneles de Apertura (Túnel hacia la cancha) -->
+        <div class="preloader-gate gate-left">
+            <div class="gate-edge-light"></div>
+        </div>
+        <div class="preloader-gate gate-right">
+            <div class="gate-edge-light"></div>
+        </div>
+
+        <div class="preloader-stage" id="preloader-stage">
             <div class="preloader-brand">
-                <div class="preloader-logo">FINNTA</div>
-                <div class="preloader-badge">PISÁ CON GAMBETA</div>
+                <div class="preloader-brand-title">FINNTA</div>
+                <div class="preloader-brand-sub">PREPARANDO LA CANCHA</div>
             </div>
 
-            <div class="preloader-ball-stage">
-                <div class="preloader-ball-ring"></div>
-                <div class="preloader-ball-icon">
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polygon points="12 6 8.5 8.5 9.8 12.5 14.2 12.5 15.5 8.5"></polygon>
-                        <line x1="12" y1="2" x2="12" y2="6"></line>
-                        <line x1="2.2" y1="9.5" x2="5.5" y2="10.5"></line>
-                        <line x1="5.5" y1="17" x2="8.5" y2="15"></line>
-                        <line x1="18.5" y1="17" x2="15.5" y2="15"></line>
-                        <line x1="21.8" y1="9.5" x2="18.5" y2="10.5"></line>
-                    </svg>
+            <!-- Balde de Pintura Atlético en SVG -->
+            <div class="paint-bucket-wrap">
+                <!-- Chorro / Goteo de pintura cayendo -->
+                <div class="paint-pour-stream">
+                    <div class="paint-stream-core"></div>
+                    <div class="paint-drop drop-1"></div>
+                    <div class="paint-drop drop-2"></div>
                 </div>
+
+                <svg class="paint-bucket-svg" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Gradiente de la pintura verde FINNTA -->
+                        <linearGradient id="paintLiquidGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                            <stop offset="0%" stop-color="#14531d" />
+                            <stop offset="40%" stop-color="#228B22" />
+                            <stop offset="85%" stop-color="#34B341" />
+                            <stop offset="100%" stop-color="#48ec5b" />
+                        </linearGradient>
+
+                        <!-- Gradiente del balde deportivo -->
+                        <linearGradient id="bucketBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#151b17" />
+                            <stop offset="25%" stop-color="#243027" />
+                            <stop offset="60%" stop-color="#19221b" />
+                            <stop offset="100%" stop-color="#0e1310" />
+                        </linearGradient>
+
+                        <!-- Gradiente para el asa metálica -->
+                        <linearGradient id="handleMetalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#a0aec0" />
+                            <stop offset="50%" stop-color="#e2e8f0" />
+                            <stop offset="100%" stop-color="#718096" />
+                        </linearGradient>
+
+                        <!-- Clip del interior del balde para contener la pintura líquida -->
+                        <clipPath id="bucketInteriorClip">
+                            <path d="M 32,68 L 49,206 C 50,216 150,216 151,206 L 168,68 C 168,68 136,76 100,76 C 64,76 32,68 32,68 Z" />
+                        </clipPath>
+                    </defs>
+
+                    <!-- 1. Asa metálica (Atrás) -->
+                    <path class="bucket-handle" d="M 28,78 C 28,18 172,18 172,78" fill="none" stroke="url(#handleMetalGrad)" stroke-width="4.5" stroke-linecap="round" />
+                    <!-- Remaches pivote -->
+                    <circle cx="28" cy="78" r="4.5" fill="#e2e8f0" stroke="#4a5568" stroke-width="1.5" />
+                    <circle cx="172" cy="78" r="4.5" fill="#e2e8f0" stroke="#4a5568" stroke-width="1.5" />
+
+                    <!-- 2. Sombra base del balde -->
+                    <ellipse cx="100" cy="222" rx="60" ry="8" fill="rgba(0,0,0,0.55)" />
+                    <!-- Brillo de fondo del líquido reflejado en el suelo -->
+                    <ellipse cx="100" cy="222" rx="42" ry="6" fill="rgba(46,163,60,0.25)" />
+
+                    <!-- 3. Cuerpo del balde (fondo exterior) -->
+                    <path d="M 30,68 L 48,208 C 49,218 151,218 152,208 L 170,68 Z" fill="url(#bucketBodyGrad)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+
+                    <!-- 4. PINTURA LÍQUIDA INTERIOR (Recortada por el clip del balde) -->
+                    <g clip-path="url(#bucketInteriorClip)">
+                        <!-- Grupo contenedor del nivel de pintura: translateY va desde 145 (vacío) a 0 (lleno) -->
+                        <g id="paint-liquid-level" class="paint-liquid-level" transform="translate(0, 145)">
+                            <!-- Capa líquida de fondo (ondulación desfasada) -->
+                            <path class="liquid-wave-bg" d="M -200,68 Q -150,60 -100,68 T 0,68 T 100,68 T 200,68 T 300,68 T 400,68 V 230 H -200 Z" fill="#1b6324" />
+                            <!-- Capa líquida principal con gradiente neón -->
+                            <path class="liquid-wave-fg" d="M -200,68 Q -150,76 -100,68 T 0,68 T 100,68 T 200,68 T 300,68 T 400,68 V 230 H -200 Z" fill="url(#paintLiquidGrad)" />
+                            <!-- Espuma / destello superior de la ola -->
+                            <path class="liquid-wave-foam" d="M -200,68 Q -150,76 -100,68 T 0,68 T 100,68 T 200,68 T 300,68 T 400,68" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.8" />
+                        </g>
+                    </g>
+
+                    <!-- 5. Borde y relieves del balde -->
+                    <!-- Anillo / Borde superior -->
+                    <ellipse cx="100" cy="68" rx="70" ry="11" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2.5" />
+                    <ellipse cx="100" cy="68" rx="68" ry="9.5" fill="none" stroke="url(#handleMetalGrad)" stroke-width="1.2" />
+
+                    <!-- Reflejo frontal de brillo / volumen 3D -->
+                    <path d="M 46,74 L 59,204 C 54,204 50,198 48,190 L 37,74 Z" fill="rgba(255,255,255,0.06)" />
+
+                    <!-- Logo FINNTA grabado en el frente del balde -->
+                    <text x="100" y="146" text-anchor="middle" font-family="'Outfit', sans-serif" font-weight="900" font-size="16" letter-spacing="4" fill="rgba(255,255,255,0.28)">FINNTA</text>
+                    <text x="100" y="159" text-anchor="middle" font-family="'Outfit', sans-serif" font-weight="700" font-size="7.5" letter-spacing="3" fill="#34B341">PINTURA DE CANCHA</text>
+                </svg>
             </div>
 
-            <div class="preloader-bar-wrap">
-                <div class="preloader-bar" id="preloader-bar"></div>
-            </div>
-
-            <div class="preloader-info">
-                <span class="preloader-phrase" id="preloader-phrase">Saliendo a la cancha…</span>
-                <span class="preloader-percent" id="preloader-percent">0%</span>
+            <!-- Porcentaje y Estado Real -->
+            <div class="preloader-real-metrics">
+                <div class="preloader-percent-num" id="real-preloader-pct">0%</div>
+                <div class="preloader-status-msg" id="real-preloader-status">Iniciando vestuario…</div>
             </div>
         </div>
     </div>
