@@ -14,8 +14,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 // ---------------------------------------------------------------------
 //  CONFIGURACIÓN
 // ---------------------------------------------------------------------
-// TODO: reemplazar por el número real del proveedor (formato internacional, sin + ni espacios)
-const WHATSAPP_NUMBER = '5491100000000';
+// Número de WhatsApp oficial para recibir pedidos (formato internacional)
+const WHATSAPP_NUMBER = '5491155622736';
 const MODEL_URL = 'Sin_nombre.glb';
 const PRICE_LABEL = '$25.000 ARS';
 const DECAL_DEPTH = 0.12;            // profundidad de proyección (unidades del modelo)
