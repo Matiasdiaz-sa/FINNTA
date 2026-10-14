@@ -1,4 +1,7 @@
 :root {
+    color-scheme: light;
+    forced-color-adjust: none;
+    -webkit-forced-color-adjust: none;
     --bg-color: #FFFFFF;
     /* Pure white, clean */
     --text-primary: #1A1A1A;
@@ -19,17 +22,54 @@
 }
 
 html {
+    color-scheme: light;
+    forced-color-adjust: none;
+    -webkit-forced-color-adjust: none;
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
 }
 
 body {
+    color-scheme: light;
+    forced-color-adjust: none;
+    -webkit-forced-color-adjust: none;
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-primary);
     overflow-x: hidden;
     scroll-behavior: smooth;
+}
+
+/* Prevenir inversión forzada de Dark Mode en navegadores móviles */
+input,
+select,
+textarea,
+button {
+    color-scheme: light;
+    forced-color-adjust: none;
+    -webkit-forced-color-adjust: none;
+}
+
+canvas,
+svg,
+img,
+video,
+picture,
+model-viewer,
+.hero-sequence,
+.customizer-section,
+.customizer-preview,
+.finnta-preloader,
+.mask-visual,
+#liquid-color-mask,
+#liquid-mask-svg,
+#liquid-cursor-blob,
+#liquid-paint-splashes,
+#preloader-fluid-canvas,
+#customizer-canvas {
+    forced-color-adjust: none !important;
+    -webkit-forced-color-adjust: none !important;
 }
 
 button,
@@ -3795,3 +3835,89 @@ footer p {
         text-align: center;
     }
 }
+
+/* =========================================================================
+   PROTECCIÓN INTEGRAL CONTRA MODO OSCURO (DARK MODE) EN MÓVILES Y NAVEGADORES
+   Evita que el modo oscuro del sistema operativo o navegador fuerce
+   la inversión de colores, rompa las máscaras SVG, opaque el canvas Three.js
+   o altere los contrastes y fondos institucionales.
+   ========================================================================= */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: light !important;
+        forced-color-adjust: none !important;
+        -webkit-forced-color-adjust: none !important;
+        --bg-color: #FFFFFF !important;
+        --text-primary: #1A1A1A !important;
+        --text-secondary: #5A5A5A !important;
+        --accent-color: #32A83E !important;
+        --card-bg: #FFFFFF !important;
+        --border-color: #E5E5E5 !important;
+    }
+
+    html,
+    body {
+        color-scheme: light !important;
+        forced-color-adjust: none !important;
+        -webkit-forced-color-adjust: none !important;
+        background-color: #FFFFFF !important;
+        color: #1A1A1A !important;
+    }
+
+    /* Blindar secciones y fondos */
+    .hero-sequence,
+    .customizer-section,
+    .catalog-section,
+    .quality-section,
+    .footer-section,
+    .modal,
+    .modal-content,
+    .cart-sidebar,
+    .product-card,
+    .benefit-card,
+    .feature-card,
+    .preview-stage,
+    .finnta-preloader {
+        color-scheme: light !important;
+        forced-color-adjust: none !important;
+        -webkit-forced-color-adjust: none !important;
+    }
+
+    /* Proteger canvas WebGL 3D, fluidos y máscaras SVG */
+    canvas,
+    svg,
+    img,
+    video,
+    picture,
+    model-viewer,
+    .mask-visual,
+    .color-mask-wrapper,
+    #liquid-mask-container,
+    #liquid-cursor-blob,
+    #liquid-paint-splashes,
+    #preloader-fluid-canvas,
+    #customizer-canvas,
+    .hero-bottom-decoration,
+    .desktop-wave,
+    .hero-wave {
+        filter: none !important;
+        forced-color-adjust: none !important;
+        -webkit-forced-color-adjust: none !important;
+        color-scheme: light !important;
+    }
+
+    /* Proteger inputs, selectores y botones */
+    input,
+    select,
+    textarea,
+    button,
+    .segmented,
+    .seg-btn,
+    .color-swatch,
+    .size-btn,
+    .feature-tab-btn {
+        color-scheme: light !important;
+        forced-color-adjust: none !important;
+        -webkit-forced-color-adjust: none !important;
+    }
+}

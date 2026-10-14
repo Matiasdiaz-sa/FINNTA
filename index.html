@@ -6,6 +6,8 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="#ffffff">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <title>Finnta | Pisá con Gambeta</title>
     <meta name="description"
         content="Sandalias personalizadas para clubes de fútbol. Diseñá tu par y llevá la pasión a cada paso.">
@@ -85,7 +87,7 @@
 
                 <div class="mask-visual" id="hero-liquid-stage">
                     <!-- SVG definitions para Máscara Líquida Orgánica / Lando Norris Fluid Effect -->
-                    <svg width="0" height="0" style="position: absolute; pointer-events: none;">
+                    <svg width="0" height="0" style="position: absolute; pointer-events: none; forced-color-adjust: none; color-scheme: light;">
                         <defs>
                             <!-- Filtro de fluido orgánico: Gooey + Turbulencia de onda líquida submarina -->
                             <filter id="underwater-fluid-filter" x="-30%" y="-30%" width="160%" height="160%">
@@ -105,12 +107,12 @@
                             </filter>
 
                             <mask id="liquid-color-mask" maskUnits="userSpaceOnUse" x="-500" y="-500" width="2000"
-                                height="2000">
-                                <g id="liquid-mask-container" filter="url(#underwater-fluid-filter)">
+                                height="2000" style="forced-color-adjust: none;">
+                                <g id="liquid-mask-container" filter="url(#underwater-fluid-filter)" style="forced-color-adjust: none;">
                                     <!-- Estela de agua hidrodinámica: empuje frontal redondeado y cola que se va uniendo atrás -->
-                                    <path id="liquid-cursor-blob" d="" fill="#ffffff" />
+                                    <path id="liquid-cursor-blob" d="" fill="#ffffff" style="forced-color-adjust: none;" />
                                     <!-- Ondas y baldazos expansivos de pintura líquida limpios -->
-                                    <g id="liquid-paint-splashes" fill="#ffffff"></g>
+                                    <g id="liquid-paint-splashes" fill="#ffffff" style="forced-color-adjust: none;"></g>
                                 </g>
                             </mask>
                         </defs>
