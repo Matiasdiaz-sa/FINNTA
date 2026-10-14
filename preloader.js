@@ -406,14 +406,14 @@
 
         // Pausa breve para apreciar la pantalla 100% llena de pintura
         setTimeout(() => {
-            // Se abren las cortinas hacia los laterales como la salida a la cancha
+            // Se sube como telón hacia arriba revelando la cancha desde abajo
             preloader.classList.add('preloader-opening');
 
             setTimeout(() => {
                 preloader.style.display = 'none';
                 if (animId) cancelAnimationFrame(animId);
-            }, 840);
-        }, 320);
+            }, 900);
+        }, 280);
     }
 
     // Timeout de seguridad máximo (3.5 segundos)
