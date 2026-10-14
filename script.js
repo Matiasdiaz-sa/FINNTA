@@ -1,16 +1,35 @@
 // =========================================================================
-// PANTALLA DE CARGA REAL FINNTA: BALDE DE PINTURA + APERTURA DE VESTUARIO
+// PANTALLA DE CARGA REAL FINNTA: PINTURA LÍQUIDA ULTRA FLUIDA (60/120 FPS)
+// + APERTURA CINEMATOGRÁFICA DE VESTUARIO
 // (Monitorea carga real de texturas, fuentes, ventana y modelo 3D)
 // =========================================================================
 window.FinntaRealLoader = (function () {
     const preloader = document.getElementById('finnta-preloader');
     if (!preloader) return { onModelProgress: () => {}, onModelReady: () => {} };
 
+    const canvas = document.getElementById('preloader-fluid-canvas');
     const pctEl = document.getElementById('real-preloader-pct');
     const statusEl = document.getElementById('real-preloader-status');
-    const oceanEl = document.getElementById('screen-paint-ocean');
 
-    // Estado real de recursos
+    if (!canvas) return { onModelProgress: () => {}, onModelReady: () => {} };
+
+    const ctx = canvas.getContext('2d');
+    let width = 0;
+    let height = 0;
+    let animId = null;
+
+    function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas, { passive: true });
+
+    // Estado real de recursos de fondo
     let fontReady = false;
     let imagesTotal = 0;
     let imagesLoaded = 0;
@@ -35,7 +54,7 @@ window.FinntaRealLoader = (function () {
         fontReady = true;
     }
 
-    // 2. Texturas e imágenes críticas de la portada
+    // 2. Texturas e imágenes críticas
     const criticalImages = [
         'sandalia_negra_perspectiva_1.png',
         'sandalia_color_perspectiva_1.png',
@@ -46,11 +65,16 @@ window.FinntaRealLoader = (function () {
 
     criticalImages.forEach((src) => {
         const img = new Image();
-        img.onload = img.onerror = () => {
+        let done = false;
+        const markDone = () => {
+            if (done) return;
+            done = true;
             imagesLoaded++;
             recalculateRealProgress();
         };
+        img.onload = img.onerror = markDone;
         img.src = src;
+        if (img.complete) markDone();
     });
 
     // 3. Model-viewer del showcase
@@ -80,12 +104,6 @@ window.FinntaRealLoader = (function () {
     function recalculateRealProgress() {
         if (isOpening) return;
 
-        // Ponderación real:
-        // Fuentes: 10%
-        // Imágenes críticas: 25% (6.25% c/u)
-        // Modelo 3D Three.js: 45% (stream XHR en vivo)
-        // Showcase 3D: 10%
-        // Window Load (CSS + DOM + scripts): 10%
         let realSum = 0;
         if (fontReady) realSum += 10;
         if (imagesTotal > 0) realSum += (imagesLoaded / imagesTotal) * 25;
@@ -110,68 +128,280 @@ window.FinntaRealLoader = (function () {
         }
     }
 
-    // Render del nivel de líquido y texto
-    function render(pct) {
-        if (pctEl) pctEl.textContent = `${Math.round(pct)}%`;
+    // --- Motor de Física de Fluidos (Pintura Líquida Ultra Fluida a 120 FPS) ---
+    let time = 0;
 
-        if (oceanEl) {
-            // Sube la marea de pintura cubriendo toda la pantalla de abajo hacia arriba
-            const boundedPct = Math.min(100, Math.max(0, pct));
-            oceanEl.style.height = `${boundedPct}%`;
+    // Gotas de pintura que caen desde arriba
+    const drops = [];
+    let lastDropTime = 0;
+
+    // Ondas y salpicaduras en la superficie
+    const ripples = [];
+
+    // Burbujas subiendo dentro de la pintura
+    const bubbles = [];
+    for (let i = 0; i < 24; i++) {
+        bubbles.push({
+            x: Math.random() * (window.innerWidth || 1200),
+            y: Math.random() * (window.innerHeight || 800),
+            radius: 2 + Math.random() * 4.5,
+            speed: 0.6 + Math.random() * 1.4,
+            wobble: Math.random() * Math.PI * 2,
+            opacity: 0.25 + Math.random() * 0.45
+        });
+    }
+
+    function updatePhysics(dt) {
+        time += dt * 0.0022;
+
+        // Suavizado ultra fluido del progreso real (Lerp orgánico)
+        const diff = targetPercent - currentPercent;
+        if (Math.abs(diff) < 0.05) {
+            currentPercent = targetPercent;
+        } else {
+            currentPercent += diff * 0.075;
         }
 
+        // Nivel de pintura en Y (de abajo hacia arriba)
+        // 0% => height + 40 (abajo de la pantalla)
+        // 100% => -30 (cubre totalmente la pantalla)
+        const waterY = height - (height * (currentPercent / 100));
+
+        // Spawneo de gotas de pintura líquida
+        if (time - lastDropTime > 0.45 && currentPercent < 98) {
+            lastDropTime = time;
+            drops.push({
+                x: width * 0.5 + (Math.random() - 0.5) * Math.min(width * 0.6, 360),
+                y: -25,
+                vy: 4 + Math.random() * 3,
+                radius: 4 + Math.random() * 4,
+                length: 14 + Math.random() * 10
+            });
+        }
+
+        // Actualizar gotas de pintura
+        for (let i = drops.length - 1; i >= 0; i--) {
+            const d = drops[i];
+            d.y += d.vy;
+            d.vy += 0.38; // Gravedad
+
+            // Si la gota choca con la superficie de la pintura
+            if (d.y >= waterY) {
+                // Dispara onda expansiva en la superficie
+                ripples.push({
+                    x: d.x,
+                    radius: 0,
+                    maxRadius: 180 + Math.random() * 80,
+                    amp: 16 + Math.random() * 10,
+                    speed: 4.8,
+                    life: 1.0
+                });
+                drops.splice(i, 1);
+            }
+        }
+
+        // Actualizar ondas expansivas (ripples)
+        for (let i = ripples.length - 1; i >= 0; i--) {
+            const r = ripples[i];
+            r.radius += r.speed;
+            r.life -= 0.022;
+            if (r.life <= 0 || r.radius >= r.maxRadius) {
+                ripples.splice(i, 1);
+            }
+        }
+
+        // Actualizar burbujas
+        for (let i = 0; i < bubbles.length; i++) {
+            const b = bubbles[i];
+            b.y -= b.speed;
+            b.wobble += 0.04;
+            b.x += Math.sin(b.wobble) * 0.6;
+            // Si supera la superficie de la pintura, reinicia abajo
+            if (b.y < waterY) {
+                b.y = height + 10;
+                b.x = Math.random() * width;
+            }
+        }
+
+        // Actualizar métricas en pantalla
+        if (pctEl) pctEl.textContent = `${Math.round(currentPercent)}%`;
+
         if (statusEl) {
-            if (pct < 15) {
+            if (currentPercent < 15) {
                 statusEl.textContent = 'Armando el vestuario…';
-            } else if (pct < 35) {
+            } else if (currentPercent < 35) {
                 statusEl.textContent = 'Cargando tipografías de club…';
-            } else if (pct < 80) {
+            } else if (currentPercent < 80) {
                 if (!model3DReady && model3DProgress > 0) {
                     statusEl.textContent = `Descargando sandalia 3D (${Math.round(model3DProgress * 100)}%)…`;
                 } else {
-                    statusEl.textContent = 'Preparando texturas de césped y goma EVA…';
+                    statusEl.textContent = 'Preparando texturas de césped y EVA…';
                 }
-            } else if (pct < 99) {
+            } else if (currentPercent < 99) {
                 statusEl.textContent = 'Calibrando personalizador en la cancha…';
             } else {
                 statusEl.textContent = '¡Cancha lista! Abriendo vestuario…';
             }
         }
-    }
 
-    // Animación fluida de subida del nivel de pintura
-    const progressLoop = setInterval(() => {
-        if (currentPercent < targetPercent) {
-            const step = Math.max(0.6, (targetPercent - currentPercent) * 0.25);
-            currentPercent = Math.min(targetPercent, currentPercent + step);
-            render(currentPercent);
-        }
-
-        if (currentPercent >= 99.5 && targetPercent >= 100 && !isOpening) {
-            currentPercent = 100;
-            render(100);
+        // Trigger de apertura cuando la pantalla se llenó de pintura 100%
+        if (currentPercent >= 99.6 && targetPercent >= 100 && !isOpening) {
             triggerOpening();
         }
-    }, 28);
+
+        return waterY;
+    }
+
+    function draw(waterY) {
+        ctx.clearRect(0, 0, width, height);
+
+        // Fondo oscuro de estadio
+        ctx.fillStyle = '#050806';
+        ctx.fillRect(0, 0, width, height);
+
+        // Si la pintura aún no ha subido nada
+        if (currentPercent <= 0) return;
+
+        // 1. Capa de Olas Trasera (Profunda - Sombra esmeralda)
+        ctx.fillStyle = 'rgba(16, 62, 22, 0.7)';
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        for (let x = 0; x <= width; x += 10) {
+            const y = waterY +
+                Math.sin(x * 0.0035 + time * 1.8) * 18 +
+                Math.cos(x * 0.007 + time * 1.2) * 10;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(width, height);
+        ctx.closePath();
+        ctx.fill();
+
+        // 2. Capa de Olas Media (Verde cancha intenso)
+        ctx.fillStyle = 'rgba(32, 126, 44, 0.88)';
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        for (let x = 0; x <= width; x += 10) {
+            const y = waterY +
+                Math.sin(x * 0.0048 - time * 2.2 + 1.2) * 16 +
+                Math.cos(x * 0.003 + time * 0.9) * 12;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(width, height);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3. Capa de Olas Frontal (Pintura verde neón con oleaje + ripples)
+        const paintGrad = ctx.createLinearGradient(0, Math.max(0, waterY - 50), 0, height);
+        paintGrad.addColorStop(0, '#4cf563');
+        paintGrad.addColorStop(0.08, '#34B341');
+        paintGrad.addColorStop(0.35, '#22842c');
+        paintGrad.addColorStop(0.75, '#165e1f');
+        paintGrad.addColorStop(1, '#0c3511');
+
+        ctx.fillStyle = paintGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+
+        // Guardamos los puntos para la línea de brillo de la cresta
+        const crestPoints = [];
+
+        for (let x = 0; x <= width; x += 8) {
+            let y = waterY +
+                Math.sin(x * 0.0042 + time * 2.6 + 2.8) * 20 +
+                Math.sin(x * 0.008 + time * 3.4) * 8;
+
+            // Perturbaciones orgánicas de los ripples de gotas
+            for (let j = 0; j < ripples.length; j++) {
+                const r = ripples[j];
+                const dist = Math.abs(x - r.x);
+                if (dist < r.radius) {
+                    const wavePhase = (dist - r.radius) * 0.08;
+                    y += Math.sin(wavePhase) * r.amp * r.life;
+                }
+            }
+
+            crestPoints.push({ x, y });
+            ctx.lineTo(x, y);
+        }
+
+        ctx.lineTo(width, height);
+        ctx.closePath();
+        ctx.fill();
+
+        // 4. Cresta luminosa de pintura húmeda (Specular gloss highlight)
+        if (crestPoints.length > 1) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(crestPoints[0].x, crestPoints[0].y);
+            for (let i = 1; i < crestPoints.length; i++) {
+                ctx.lineTo(crestPoints[i].x, crestPoints[i].y);
+            }
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.lineWidth = 2.8;
+            ctx.shadowColor = '#4cf563';
+            ctx.shadowBlur = 16;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // 5. Gotas de pintura cayendo
+        for (let i = 0; i < drops.length; i++) {
+            const d = drops[i];
+            ctx.save();
+            ctx.fillStyle = '#4cf563';
+            ctx.shadowColor = '#4cf563';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.ellipse(d.x, d.y, d.radius, d.length, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // 6. Burbujas subiendo en la pintura
+        for (let i = 0; i < bubbles.length; i++) {
+            const b = bubbles[i];
+            if (b.y > waterY) {
+                ctx.save();
+                ctx.fillStyle = `rgba(164, 255, 177, ${b.opacity})`;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+    }
+
+    let lastTime = performance.now();
+    function loop(now) {
+        const dt = Math.min(now - lastTime, 35);
+        lastTime = now;
+
+        const waterY = updatePhysics(dt);
+        draw(waterY);
+
+        if (!isOpening || currentPercent < 100) {
+            animId = requestAnimationFrame(loop);
+        }
+    }
+    animId = requestAnimationFrame(loop);
 
     function triggerOpening() {
         if (isOpening) return;
         isOpening = true;
-        clearInterval(progressLoop);
 
-        // Cuando la pantalla está 100% llena de pintura
-        if (oceanEl) oceanEl.style.height = '105%';
+        currentPercent = 100;
         preloader.classList.add('preloader-filled');
 
-        // Pausa para apreciar la pantalla llena de pintura y luego apertura
+        // Pausa breve para apreciar la pantalla 100% llena de pintura
         setTimeout(() => {
-            // Se abren las cortinas de pintura hacia los laterales como salida a la cancha
+            // Se abren las cortinas hacia los laterales como la salida a la cancha
             preloader.classList.add('preloader-opening');
 
             setTimeout(() => {
                 preloader.style.display = 'none';
-            }, 880);
-        }, 380);
+                if (animId) cancelAnimationFrame(animId);
+            }, 840);
+        }, 340);
     }
 
     // Timeout de seguridad de 8s (por si una red corta o bloqueador frena un CDN externo)

@@ -36,40 +36,10 @@
 
 <body>
 
-    <!-- Pantalla de Carga: La Pantalla se Llena de Pintura + Apertura de Cancha -->
+    <!-- Pantalla de Carga: La Pantalla se Llena de Pintura Líquida (100% Real & Fluido) -->
     <div id="finnta-preloader" class="finnta-preloader" aria-live="polite" role="status">
-        <!-- Chorro y lluvia de gotas de pintura cayendo desde arriba -->
-        <div class="screen-paint-rain" id="paint-rain">
-            <div class="rain-stream stream-1"></div>
-            <div class="rain-stream stream-2"></div>
-            <div class="rain-drop drop-a"></div>
-            <div class="rain-drop drop-b"></div>
-            <div class="rain-drop drop-c"></div>
-        </div>
-
-        <!-- Marea de Pintura Líquida que llena toda la pantalla desde abajo -->
-        <div class="screen-paint-ocean" id="screen-paint-ocean">
-            <!-- Crestas de olas SVG fluidas que van en la superficie de la pintura -->
-            <div class="paint-wave-crest-wrap">
-                <!-- Ola trasera profunda -->
-                <svg class="paint-screen-wave wave-back" viewBox="0 0 1440 120" preserveAspectRatio="none">
-                    <path d="M 0,40 C 240,75 480,5 720,40 C 960,75 1200,5 1440,40 C 1680,75 1920,5 2160,40 C 2400,75 2640,5 2880,40 V 120 H 0 Z" fill="#144d1b" />
-                </svg>
-                <!-- Ola media verde club -->
-                <svg class="paint-screen-wave wave-mid" viewBox="0 0 1440 120" preserveAspectRatio="none">
-                    <path d="M 0,50 C 240,15 480,85 720,50 C 960,15 1200,85 1440,50 C 1680,15 1920,85 2160,50 C 2400,15 2640,85 2880,50 V 120 H 0 Z" fill="#228a2e" />
-                </svg>
-                <!-- Ola frontal neón brillante -->
-                <svg class="paint-screen-wave wave-front" viewBox="0 0 1440 120" preserveAspectRatio="none">
-                    <path d="M 0,45 C 240,80 480,10 720,45 C 960,80 1200,10 1440,45 C 1680,80 1920,10 2160,45 C 2400,80 2640,10 2880,45 V 120 H 0 Z" fill="#34B341" />
-                </svg>
-                <!-- Línea de resplandor neón en la cresta -->
-                <div class="wave-glow-line"></div>
-            </div>
-
-            <!-- Cuerpo de pintura líquida sólida que llena el viewport -->
-            <div class="paint-screen-body"></div>
-        </div>
+        <!-- Canvas de fluidos de alta performance a 60/120fps -->
+        <canvas id="preloader-fluid-canvas" class="preloader-fluid-canvas"></canvas>
 
         <!-- Compuertas de salida a la cancha para la apertura -->
         <div class="preloader-curtain curtain-left">
