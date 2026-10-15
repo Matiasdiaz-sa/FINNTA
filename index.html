@@ -434,50 +434,19 @@
                             <span class="step-badge-num">Paso 1</span>
                             <h4 class="step-title">¿Cuántos pares necesitás?</h4>
                         </div>
-                        <div class="qty-interactive-box">
-                            <div class="qty-stepper-box">
-                                <button type="button" class="qty-btn-step" id="qty-minus" aria-label="Disminuir pares">−</button>
-                                <div class="qty-val-wrapper">
-                                    <input type="number" id="qty-input" class="qty-number-input" min="1" max="3000" value="1" step="1" inputmode="numeric">
-                                    <span class="qty-unit-tag" id="qty-unit-tag">pares</span>
+                        <div class="qty-line-box">
+                            <!-- Cantidad arriba de la línea -->
+                            <div class="qty-above-line">
+                                <div class="qty-counter-display">
+                                    <input type="number" id="qty-input" class="qty-clean-input" min="1" max="3000" value="1" step="1" inputmode="numeric" aria-label="Cantidad de pares">
+                                    <span class="qty-clean-unit" id="qty-unit-tag">par</span>
                                 </div>
-                                <button type="button" class="qty-btn-step" id="qty-plus" aria-label="Aumentar pares">+</button>
+                                <span class="qty-clean-badge minorista" id="tier-pill-badge">Minorista (&lt; 100)</span>
                             </div>
 
-                            <!-- Línea de rango interactiva de 1 a 3000 -->
-                            <div class="qty-slider-wrap">
-                                <div class="qty-slider-track-wrap">
-                                    <input type="range" id="qty-slider" class="qty-slider-line" min="1" max="3000" value="1" step="1">
-                                </div>
-                                <div class="qty-slider-scale">
-                                    <span class="scale-point" data-val="1">1</span>
-                                    <span class="scale-point milestone-100" data-val="100">100 <small>(Mayorista ✦)</small></span>
-                                    <span class="scale-point" data-val="1500">1500</span>
-                                    <span class="scale-point" data-val="3000">3000</span>
-                                </div>
-                            </div>
-
-                            <!-- Botones rápidos de cantidad -->
-                            <div class="qty-chips-row">
-                                <button type="button" class="qty-chip active" data-qty="1">1 par</button>
-                                <button type="button" class="qty-chip" data-qty="25">25</button>
-                                <button type="button" class="qty-chip" data-qty="50">50</button>
-                                <button type="button" class="qty-chip qty-chip-mayorista" data-qty="100">100 ✦</button>
-                                <button type="button" class="qty-chip" data-qty="250">250</button>
-                                <button type="button" class="qty-chip" data-qty="500">500</button>
-                                <button type="button" class="qty-chip" data-qty="1000">1000</button>
-                                <button type="button" class="qty-chip" data-qty="3000">3000</button>
-                            </div>
-
-                            <!-- Tarjeta de estado dinámico según cantidad -->
-                            <div class="qty-tier-status minorista" id="qty-tier-status">
-                                <div class="tier-status-header">
-                                    <span class="tier-pill-badge" id="tier-pill-badge">1 a 99 pares · Minorista</span>
-                                    <span class="tier-color-rule" id="tier-color-rule">🔒 Solo tira Gris Oscuro</span>
-                                </div>
-                                <p class="tier-status-desc" id="tier-status-desc">
-                                    Con menos de 100 pares la tira es exclusivamente en <strong>Gris Oscuro oficial FINTTA</strong> con grabado de escudo y dorsal. Deslizá a 100+ para desbloquear tiras blancas y colores de club.
-                                </p>
+                            <!-- Solo la línea interactiva -->
+                            <div class="qty-slider-track-wrap">
+                                <input type="range" id="qty-slider" class="qty-slider-line" min="1" max="3000" value="1" step="1" aria-label="Deslizador de cantidad de pares">
                             </div>
                         </div>
 
@@ -633,19 +602,28 @@
                             <span class="step-badge-num" id="text-step-num">Paso 3</span>
                             <h4 class="step-title" id="text-heading">Número o Texto</h4>
                         </div>
+
+                        <!-- Aviso dinámico si es minorista (< 100) en dorsal -->
+                        <div class="minorista-color-notice" id="minorista-text-notice">
+                            <span class="notice-icon">ℹ️</span>
+                            <p class="notice-msg">
+                                <strong>Menos de 100 unidades:</strong> El dorsal se fabrica exclusivamente en <strong>Negro oficial</strong>. A partir de 100 unidades se desbloquean Dorado, Blanco y colores de club.
+                            </p>
+                        </div>
+
                         <div class="text-input-row">
                             <input type="text" id="custom-text-input" class="custom-input"
                                 placeholder="Ej: 10" maxlength="10" value="10">
                         </div>
                         <div class="text-tools">
                             <div class="color-swatches mini-swatches" id="text-swatches">
-                                <button class="color-swatch active" data-color="#D4AF37" data-name="Dorado"
-                                    style="--sw:#D4AF37" title="Dorado"></button>
-                                <button class="color-swatch" data-color="#ffffff" data-name="Blanco"
-                                    style="--sw:#ffffff" title="Blanco"></button>
-                                <button class="color-swatch" data-color="#111111" data-name="Negro"
-                                    style="--sw:#111111" title="Negro"></button>
-                                <div class="color-picker-wrapper">
+                                <button class="color-swatch active" data-color="#111111" data-name="Negro"
+                                    style="--sw:#111111" title="Negro (Oficial)"></button>
+                                <button class="color-swatch mayorista-only" data-color="#D4AF37" data-name="Dorado"
+                                    style="--sw:#D4AF37" title="Dorado (+100 pares)"></button>
+                                <button class="color-swatch mayorista-only" data-color="#ffffff" data-name="Blanco"
+                                    style="--sw:#ffffff" title="Blanco (+100 pares)"></button>
+                                <div class="color-picker-wrapper mayorista-only" title="Color libre (+100 pares)">
                                     <input type="color" id="text-color-picker" class="color-picker" value="#D4AF37">
                                 </div>
                             </div>

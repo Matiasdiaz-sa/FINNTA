@@ -113,8 +113,8 @@ const state = {
     baseColor: '#181818',
     baseName: 'Gris Oscuro',
     text: '10',
-    textColor: '#D4AF37',
-    textColorName: 'Dorado',
+    textColor: '#111111',
+    textColorName: 'Negro',
     shieldFile: null,
     shieldImage: null,
     removeWhite: true,
@@ -318,8 +318,8 @@ function drawText() {
         // borde sutil para que se lea sobre cualquier color de base
         ctx.lineWidth = fs * 0.07;
         if (state.quantity === 'minorista') {
-            ctx.fillStyle = state.textColor || '#D4AF37';
-            ctx.strokeStyle = isLight(state.textColor || '#D4AF37') ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.4)';
+            ctx.fillStyle = '#111111';
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
         } else {
             ctx.fillStyle = state.textColor;
             ctx.strokeStyle = isLight(state.textColor) ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)';
@@ -1125,6 +1125,19 @@ function updateQuantityMode(isMayorista) {
                 activeSwatch.classList.add('active');
             }
         }
+
+        // En dorsal / texto: EXCLUSIVAMENTE Negro en menos de 100 unidades
+        state.textColor = '#111111';
+        state.textColorName = 'Negro';
+        if (textSwatches) {
+            const blackSwatch = textSwatches.querySelector('[data-color="#111111"]') || textSwatches.querySelector('.color-swatch');
+            if (blackSwatch) {
+                textSwatches.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                blackSwatch.classList.add('active');
+            }
+            const wrapper = textSwatches.querySelector('.color-picker-wrapper');
+            if (wrapper) wrapper.classList.remove('active');
+        }
     }
 
     applyBaseColor();
@@ -1170,27 +1183,15 @@ function initQuantityController() {
             qtySlider.style.setProperty('--slider-pct', `${pct}%`);
         }
 
-        // Actualizar chips activos
-        qtyChips.forEach(chip => {
-            const chipVal = parseInt(chip.dataset.qty, 10);
-            chip.classList.toggle('active', chipVal === val);
-        });
+        const unitTag = $('qty-unit-tag');
+        if (unitTag) {
+            unitTag.textContent = val === 1 ? 'par' : 'pares';
+        }
 
-        // Actualizar tarjeta dinámica de estado
-        if (tierStatus) {
-            tierStatus.classList.toggle('minorista', !isMayorista);
-            tierStatus.classList.toggle('mayorista', isMayorista);
-        }
+        // Actualizar etiqueta de categoría arriba de la barra
         if (tierBadge) {
-            tierBadge.textContent = isMayorista ? `${val} pares · Mayorista` : `${val} ${val === 1 ? 'par' : 'pares'} · Minorista`;
-        }
-        if (tierRule) {
-            tierRule.innerHTML = isMayorista ? '✨ Tira a todo color y escudo libre' : '🔒 Solo tira Gris Oscuro';
-        }
-        if (tierDesc) {
-            tierDesc.innerHTML = isMayorista
-                ? '¡Desbloqueado! Tira en <strong>Blanco</strong>, <strong>Dorado</strong> o cualquier color de tu club + escudo a todo color.'
-                : 'Con menos de 100 pares la tira es exclusivamente en <strong>Gris Oscuro oficial FINTTA</strong> con grabado de escudo y dorsal. Deslizá a 100+ para desbloquear tiras blancas y colores de club.';
+            tierBadge.className = `qty-clean-badge ${isMayorista ? 'mayorista' : 'minorista'}`;
+            tierBadge.innerHTML = isMayorista ? '✦ Mayorista (+100)' : 'Minorista (&lt; 100)';
         }
 
         if (orderQtySelect) {
@@ -1251,6 +1252,10 @@ function initQuantityController() {
 initQuantityController();
 
 bindSwatches('text-swatches', (color, name) => {
+    if (state.quantity === 'minorista' && color !== '#111111') {
+        toast('El dorsal en otros colores está disponible a partir de 100 pares (Mayorista).');
+        return;
+    }
     state.textColor = color;
     state.textColorName = name;
     
@@ -1261,6 +1266,10 @@ bindSwatches('text-swatches', (color, name) => {
 });
 
 $('text-color-picker').addEventListener('input', (e) => {
+    if (state.quantity === 'minorista') {
+        toast('El dorsal en color libre está disponible a partir de 100 pares (Mayorista).');
+        return;
+    }
     const wrap = $('text-swatches');
     wrap.querySelectorAll('.color-swatch').forEach((s) => s.classList.remove('active'));
     e.target.parentElement.classList.add('active');
