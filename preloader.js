@@ -1,11 +1,11 @@
 // =========================================================================
-// FINNTA: PANTALLA DE CARGA REAL DE PINTURA LÍQUIDA ULTRA FLUIDA (60/120 FPS)
+// FINTTA: PANTALLA DE CARGA REAL DE PINTURA LÍQUIDA ULTRA FLUIDA (60/120 FPS)
 // + APERTURA CINEMATOGRÁFICA DE VESTUARIO
 // =========================================================================
 (function () {
-    const preloader = document.getElementById('finnta-preloader');
+    const preloader = document.getElementById('fintta-preloader') || document.getElementById('finnta-preloader');
     if (!preloader) {
-        window.FinntaRealLoader = { onModelProgress: () => {}, onModelReady: () => {} };
+        window.FinttaRealLoader = window.FinntaRealLoader = { onModelProgress: () => {}, onModelReady: () => {} };
         return;
     }
 
@@ -14,7 +14,7 @@
     const statusEl = document.getElementById('real-preloader-status');
 
     if (!canvas) {
-        window.FinntaRealLoader = { onModelProgress: () => {}, onModelReady: () => {} };
+        window.FinttaRealLoader = window.FinntaRealLoader = { onModelProgress: () => {}, onModelReady: () => {} };
         return;
     }
 
@@ -248,10 +248,10 @@
             if (currentPercent < 20) {
                 statusEl.textContent = 'Iniciando vestuario…';
             } else if (currentPercent < 45) {
-                statusEl.textContent = 'Cargando tipografías y colores de club…';
+                statusEl.textContent = 'Cargando tipografías y detalles oficiales…';
             } else if (currentPercent < 75) {
                 statusEl.textContent = model3DReady
-                    ? 'Texturas de césped y EVA listas…'
+                    ? 'Texturas y acabados listos…'
                     : 'Preparando sandalia 3D en la cancha…';
             } else if (currentPercent < 99) {
                 statusEl.textContent = 'Calibrando personalizador oficial…';
@@ -271,12 +271,12 @@
     function draw(waterY) {
         ctx.clearRect(0, 0, width, height);
 
-        // Fondo oscuro de estadio
-        ctx.fillStyle = '#050806';
+        // Fondo oscuro de estadio / vestuario de gala
+        ctx.fillStyle = '#060606';
         ctx.fillRect(0, 0, width, height);
 
-        // Capa 1: Sombra esmeralda profunda (olas lentas)
-        ctx.fillStyle = 'rgba(16, 62, 22, 0.72)';
+        // Capa 1: Sombra ámbar bronce profunda (olas lentas)
+        ctx.fillStyle = 'rgba(85, 60, 10, 0.72)';
         ctx.beginPath();
         ctx.moveTo(0, height);
         for (let x = 0; x <= width; x += 12) {
@@ -289,8 +289,8 @@
         ctx.closePath();
         ctx.fill();
 
-        // Capa 2: Verde cancha intenso (olas intermedias)
-        ctx.fillStyle = 'rgba(32, 126, 44, 0.88)';
+        // Capa 2: Oro cálido intermedio (olas intermedias)
+        ctx.fillStyle = 'rgba(180, 136, 18, 0.88)';
         ctx.beginPath();
         ctx.moveTo(0, height);
         for (let x = 0; x <= width; x += 10) {
@@ -303,13 +303,13 @@
         ctx.closePath();
         ctx.fill();
 
-        // Capa 3: Pintura verde neón vibrante con oleaje frontal + ripples
+        // Capa 3: Pintura oro líquida metálica vibrante con oleaje frontal + ripples
         const paintGrad = ctx.createLinearGradient(0, Math.max(0, waterY - 50), 0, height);
-        paintGrad.addColorStop(0, '#4cf563');
-        paintGrad.addColorStop(0.08, '#34B341');
-        paintGrad.addColorStop(0.35, '#22842c');
-        paintGrad.addColorStop(0.75, '#165e1f');
-        paintGrad.addColorStop(1, '#0c3511');
+        paintGrad.addColorStop(0, '#FFF5BD');    // Reflejo champaña en cresta
+        paintGrad.addColorStop(0.08, '#F5C542'); // Oro brillante intenso
+        paintGrad.addColorStop(0.35, '#D4AF37'); // Oro clásico FINTTA
+        paintGrad.addColorStop(0.75, '#A07612'); // Oro bruñido profundo
+        paintGrad.addColorStop(1, '#4A3304');    // Sombra ámbar oscura
 
         ctx.fillStyle = paintGrad;
         ctx.beginPath();
@@ -339,7 +339,7 @@
         ctx.closePath();
         ctx.fill();
 
-        // Capa 4: Cresta brillante de pintura líquida húmeda
+        // Capa 4: Cresta brillante de pintura líquida dorada
         if (crestPoints.length > 1) {
             ctx.save();
             ctx.beginPath();
@@ -347,33 +347,33 @@
             for (let i = 1; i < crestPoints.length; i++) {
                 ctx.lineTo(crestPoints[i].x, crestPoints[i].y);
             }
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(255, 255, 240, 0.92)';
             ctx.lineWidth = 3;
-            ctx.shadowColor = '#4cf563';
-            ctx.shadowBlur = 16;
+            ctx.shadowColor = '#F5C542';
+            ctx.shadowBlur = 18;
             ctx.stroke();
             ctx.restore();
         }
 
-        // Capa 5: Gotas de pintura cayendo
+        // Capa 5: Gotas de oro líquido cayendo
         for (let i = 0; i < drops.length; i++) {
             const d = drops[i];
             ctx.save();
-            ctx.fillStyle = '#4cf563';
-            ctx.shadowColor = '#4cf563';
-            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#FFD700';
+            ctx.shadowColor = '#F5C542';
+            ctx.shadowBlur = 14;
             ctx.beginPath();
             ctx.ellipse(d.x, d.y, d.radius, d.length, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         }
 
-        // Capa 6: Burbujas dentro de la pintura
+        // Capa 6: Burbujas y partículas doradas luminosas dentro de la pintura
         for (let i = 0; i < bubbles.length; i++) {
             const b = bubbles[i];
             if (b.y > waterY) {
                 ctx.save();
-                ctx.fillStyle = `rgba(164, 255, 177, ${b.opacity})`;
+                ctx.fillStyle = `rgba(255, 240, 160, ${b.opacity})`;
                 ctx.beginPath();
                 ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
                 ctx.fill();
@@ -425,7 +425,7 @@
     }, 3500);
 
     // API pública para customizer.js
-    window.FinntaRealLoader = {
+    const loaderAPI = {
         onModelProgress(ratio) {
             if (typeof ratio === 'number' && !isNaN(ratio)) {
                 model3DProgress = Math.min(1, Math.max(0, ratio));
@@ -438,4 +438,6 @@
             recalculateProgress();
         }
     };
+    window.FinttaRealLoader = loaderAPI;
+    window.FinntaRealLoader = loaderAPI;
 })();

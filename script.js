@@ -1,5 +1,5 @@
 // =========================================================================
-// FINNTA · Scripts Principales de Interacción, Personalizador y Animaciones
+// FINTTA · Scripts Principales de Interacción, Personalizador y Animaciones
 // =========================================================================
 
 // --- Efecto Fluido Submarino (Estela de Agua Hidrodinámica & Impulso Elástico de Click Suave) ---
@@ -294,6 +294,7 @@ function openStudio() {
         // Forzar recalculo de dimensiones Three.js tras la animación de apertura
         setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
+            window.dispatchEvent(new CustomEvent('fintta:studio-open'));
             window.dispatchEvent(new CustomEvent('finnta:studio-open'));
         }, 100);
     } else {
@@ -349,10 +350,7 @@ function setupMobileCustomizerSteps() {
     function switchStep(targetStep) {
         if (!targetStep) return;
 
-        const controls = document.querySelector('.customizer-controls');
-        if (controls && controls.classList.contains('minorista-mode') && targetStep === 'color') {
-            targetStep = 'shield';
-        }
+        // En ambos modos se puede elegir la edición oficial (Dorado y Negro o Dorado y Blanco)
 
         // Actualizar píldoras
         pillButtons.forEach(btn => {
@@ -423,7 +421,7 @@ if (document.readyState === 'loading') {
     setupMobileCustomizerSteps();
 }
 
-// --- Showcase Interactivo 3D FINNTA ---
+// --- Showcase Interactivo 3D FINTTA ---
 document.addEventListener("DOMContentLoaded", () => {
     const model = document.getElementById("sandal-model");
     if (!model) return;
@@ -477,7 +475,7 @@ document.addEventListener("DOMContentLoaded", () => {
             number: "04 / 04",
             badge: "VISTA COMPLETA 360°",
             title: "Explorá cada terminación",
-            desc: "Arrastrá libremente con el dedo o el mouse para girar la sandalia en cualquier dirección. Acercate con el zoom y apreciá la calidad de fabricación nacional FINNTA.",
+            desc: "Arrastrá libremente con el dedo o el mouse para girar la sandalia en cualquier dirección. Acercate con el zoom y apreciá la calidad de fabricación nacional FINTTA.",
             specs: [
                 { k: "CALIDAD", v: "Grado Deportivo A+" },
                 { k: "TALLES", v: "Del 35/36 al 45/46" }

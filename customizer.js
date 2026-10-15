@@ -1,5 +1,5 @@
 // =====================================================================
-//  FINNTA · Personalizador 3D
+//  FINTTA · Personalizador 3D
 //  El escudo y el texto se PROYECTAN sobre la malla real de la sandalia
 //  (DecalGeometry de Three.js). No son capas HTML: son geometría 3D que
 //  copia la curvatura de la tira, recibe la luz y gira con el modelo.
@@ -109,11 +109,12 @@ let activeTarget = 'shield';
 
 const state = {
     quantity: 'minorista',
-    baseColor: 'original',
+    quantityNum: 1,
+    baseColor: '#181818',
     baseName: 'Gris Oscuro',
     text: '10',
-    textColor: '#ffffff',
-    textColorName: 'Blanco',
+    textColor: '#D4AF37',
+    textColorName: 'Dorado',
     shieldFile: null,
     shieldImage: null,
     removeWhite: true,
@@ -317,8 +318,8 @@ function drawText() {
         // borde sutil para que se lea sobre cualquier color de base
         ctx.lineWidth = fs * 0.07;
         if (state.quantity === 'minorista') {
-            ctx.fillStyle = '#181818';
-            ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillStyle = state.textColor || '#D4AF37';
+            ctx.strokeStyle = isLight(state.textColor || '#D4AF37') ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.4)';
         } else {
             ctx.fillStyle = state.textColor;
             ctx.strokeStyle = isLight(state.textColor) ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)';
@@ -391,8 +392,8 @@ function drawShield() {
         removeWhiteBackground(ctx, S, S);
     }
 
-    // Efecto "grabado" realista (solo para minoristas)
-    // Convierte lo claro en transparente y lo oscuro en un tono negro/gris
+    // Efecto "grabado / estampa dorada" de alta gama (para minoristas)
+    // Aplica el tono dorado oficial FINTTA a los relieves del escudo
     if (state.quantity === 'minorista') {
         const data2 = ctx.getImageData(0, 0, S, S);
         const p2 = data2.data;
@@ -401,12 +402,11 @@ function drawShield() {
             if (a > 0) {
                 const lum = 0.299 * p2[i] + 0.587 * p2[i + 1] + 0.114 * p2[i + 2];
                 const darkness = Math.max(0, 1 - (lum / 255));
-                // Alpha ajustado por la oscuridad del pixel
                 p2[i + 3] = a * Math.pow(darkness, 1.2);
-                // Aplicar el color oscuro base (casi negro)
-                p2[i] = 24;
-                p2[i + 1] = 24;
-                p2[i + 2] = 24;
+                // Tono dorado oficial metalizado (#D4AF37)
+                p2[i] = 212;     // R
+                p2[i + 1] = 175; // G
+                p2[i + 2] = 55;  // B
             }
         }
         ctx.putImageData(data2, 0, 0);
@@ -421,12 +421,29 @@ function drawShield() {
 function applyBaseColor() {
     if (!baseMat) return;
     const isMayorista = state.quantity === 'mayorista';
+
+    let actualHex = state.baseColor;
     if (!isMayorista) {
-        state.baseColor = 'original';
+        // En minorista (menos de 100 unidades): exclusivamente tira Gris Oscuro oficial
+        actualHex = '#181818';
+        state.baseColor = '#181818';
         state.baseName = 'Gris Oscuro';
-        baseMat.color.set(0x444444);
-    } else if (state.baseColor === 'original') {
-        baseMat.color.set(0x444444);
+        baseMat.color.set(0x181818);
+    } else if (state.baseColor === 'original' || state.baseColor === '#181818' || state.baseColor === '#141414') {
+        actualHex = '#181818';
+        state.baseColor = '#181818';
+        state.baseName = 'Gris Oscuro';
+        baseMat.color.set(0x181818);
+    } else if (state.baseColor === '#F5F5F5' || state.baseColor === 'white' || state.baseColor === '#ffffff') {
+        actualHex = '#F5F5F5';
+        state.baseColor = '#F5F5F5';
+        state.baseName = 'Blanca';
+        baseMat.color.set(0xF5F5F5);
+    } else if (state.baseColor === '#D4AF37') {
+        actualHex = '#D4AF37';
+        state.baseColor = '#D4AF37';
+        state.baseName = 'Dorado Metálico';
+        baseMat.color.set(0xD4AF37);
     } else {
         baseMat.color.set(state.baseColor);
     }
@@ -437,11 +454,10 @@ function applyBaseColor() {
     const statusName = $('wheel-status-name');
     const previewSwatch = $('wheel-preview-swatch');
     const previewHex = $('wheel-preview-hex');
-    const actualHex = (!isMayorista || state.baseColor === 'original') ? '#444444' : state.baseColor;
     if (statusDot) statusDot.style.backgroundColor = actualHex;
-    if (statusName) statusName.textContent = !isMayorista ? 'Gris Oscuro (Estándar)' : (state.baseName || actualHex);
+    if (statusName) statusName.textContent = state.baseName || actualHex;
     if (previewSwatch) previewSwatch.style.backgroundColor = actualHex;
-    if (previewHex) previewHex.textContent = actualHex.toUpperCase();
+    if (previewHex) previewHex.textContent = (actualHex.startsWith('#') ? actualHex : '#181818').toUpperCase();
 }
 
 // ---------------------------------------------------------------------
@@ -491,13 +507,15 @@ new ResizeObserver(resize).observe(stage);
 resize();
 
 // Centrar inmediatamente al abrir el modal en móvil y frenar rotación automática
-window.addEventListener('finnta:studio-open', () => {
+const handleStudioOpen = () => {
     controls.autoRotate = false;
     setTimeout(() => {
         resize();
         goHome();
     }, 60);
-});
+};
+window.addEventListener('fintta:studio-open', handleStudioOpen);
+window.addEventListener('finnta:studio-open', handleStudioOpen);
 
 // ---------------------------------------------------------------------
 //  CARGA DEL MODELO
@@ -534,7 +552,7 @@ loader.load(
         });
 
         baseMat = new THREE.MeshStandardMaterial({
-            color: 0xdddddd,
+            color: 0x181818,
             roughness: 0.7,
             metalness: 0.0
         });
@@ -574,24 +592,27 @@ loader.load(
         applyBaseColor();
 
         loaderEl.classList.add('hidden');
-        if (window.FinntaRealLoader) {
-            window.FinntaRealLoader.onModelReady();
+        const realLoader = window.FinttaRealLoader || window.FinntaRealLoader;
+        if (realLoader) {
+            realLoader.onModelReady();
         }
     },
     (xhr) => {
         if (xhr.total) {
             const ratio = xhr.loaded / xhr.total;
             loaderText.textContent = `Cargando tu sandalia 3D… ${Math.round(ratio * 100)}%`;
-            if (window.FinntaRealLoader) {
-                window.FinntaRealLoader.onModelProgress(ratio);
+            const realLoader = window.FinttaRealLoader || window.FinntaRealLoader;
+            if (realLoader) {
+                realLoader.onModelProgress(ratio);
             }
         }
     },
     (err) => {
         console.error(err);
         showLoaderError('No se pudo cargar el modelo 3D. Abrí la página con un servidor local (ej: Live Server).');
-        if (window.FinntaRealLoader) {
-            window.FinntaRealLoader.onModelReady(); // Fallback so loader continues
+        const realLoader = window.FinttaRealLoader || window.FinntaRealLoader;
+        if (realLoader) {
+            realLoader.onModelReady(); // Fallback so loader continues
         }
     }
 );
@@ -671,14 +692,17 @@ function bindSwatches(containerId, onPick) {
 }
 
 bindSwatches('base-swatches', (color, name) => {
-    if (state.quantity !== 'mayorista') {
-        toast('El color de tira personalizado está disponible a partir de 100 pares (Mayorista).');
+    if (state.quantity !== 'mayorista' && color !== '#181818' && color !== 'original' && color !== '#141414') {
+        toast('Con menos de 100 unidades la tira es en Gris Oscuro oficial. Para otros colores elegí 100 pares o más.');
         return;
     }
     state.baseColor = color;
     state.baseName = name;
-    $('base-name').textContent = name;
+    const baseNameEl = $('base-name');
+    if (baseNameEl) baseNameEl.textContent = name;
     applyBaseColor();
+    drawShield();
+    drawText();
     
     // Deselect color picker wrapper if a standard swatch is clicked
     const wrapper = $('base-swatches').querySelector('.color-picker-wrapper');
@@ -1003,7 +1027,6 @@ function updateQuantityMode(isMayorista) {
     const mobileBtn = $('mobile-wheel-trigger-btn');
     const badgeText = $('wheel-badge-text');
     const badgeIcon = $('wheel-badge-icon');
-    const modal = $('color-wheel-modal');
     const shieldHeading = $('shield-heading');
     const textSwatches = $('text-swatches');
 
@@ -1028,7 +1051,10 @@ function updateQuantityMode(isMayorista) {
             textSwatches.style.opacity = '1';
             textSwatches.style.pointerEvents = 'auto';
         }
-        if (heading) heading.classList.remove('disabled-text');
+        if (heading) {
+            heading.classList.remove('disabled-text');
+            heading.textContent = 'Color de tira (Clubes y Mayorista)';
+        }
         if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club (A todo color)';
 
         // Numeración mayorista (+100 pares): 5 pasos
@@ -1048,62 +1074,55 @@ function updateQuantityMode(isMayorista) {
             shieldPrevBtn.textContent = '← Color';
         }
 
-        // Mobile wheel trigger button habilitado
+        // Mobile wheel trigger button habilitado para clubes
         if (mobileBtn) {
             mobileBtn.classList.remove('locked');
             if (badgeText) badgeText.textContent = 'Personalizar';
             if (badgeIcon) badgeIcon.style.display = 'inline-block';
         }
     } else {
+        // Modo Minorista (menos de 100 pares): SOLO GRIS OSCURO
         if (swatches) {
-            swatches.classList.add('disabled');
-            swatches.style.opacity = '0.4';
-            swatches.style.pointerEvents = 'none';
+            swatches.classList.remove('disabled');
+            swatches.style.opacity = '1';
+            swatches.style.pointerEvents = 'auto';
         }
         if (textSwatches) {
-            textSwatches.classList.add('disabled');
-            textSwatches.style.opacity = '0.4';
-            textSwatches.style.pointerEvents = 'none';
+            textSwatches.classList.remove('disabled');
+            textSwatches.style.opacity = '1';
+            textSwatches.style.pointerEvents = 'auto';
         }
-        if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club (Grabado)';
+        if (heading) {
+            heading.classList.remove('disabled-text');
+            heading.textContent = 'Color de tira (Gris Oscuro Oficial)';
+        }
+        if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club (Grabado Dorado)';
 
-        // Numeración minorista (<100 pares): 4 pasos directos
-        if (shieldStepNum) shieldStepNum.textContent = 'Paso 2';
-        if (textStepNum) textStepNum.textContent = 'Paso 3';
-        if (orderStepNum) orderStepNum.textContent = 'Paso 4';
+        // Pasos completos y claros
+        if (shieldStepNum) shieldStepNum.textContent = 'Paso 3';
+        if (textStepNum) textStepNum.textContent = 'Paso 4';
+        if (orderStepNum) orderStepNum.textContent = 'Paso 5';
 
-        if (pillShield) pillShield.textContent = '2';
-        if (pillText) pillText.textContent = '3';
-        if (pillOrder) pillOrder.textContent = '4';
+        if (pillShield) pillShield.textContent = '3';
+        if (pillText) pillText.textContent = '4';
+        if (pillOrder) pillOrder.textContent = '5';
 
-        if (qtyNextBtn) qtyNextBtn.setAttribute('data-next', 'shield');
-        if (qtyNextText) qtyNextText.textContent = 'Siguiente: Escudo';
+        if (qtyNextBtn) qtyNextBtn.setAttribute('data-next', 'color');
+        if (qtyNextText) qtyNextText.textContent = 'Siguiente: Color de tira';
 
         if (shieldPrevBtn) {
-            shieldPrevBtn.setAttribute('data-prev', 'qty');
-            shieldPrevBtn.textContent = '← Cantidad';
+            shieldPrevBtn.setAttribute('data-prev', 'color');
+            shieldPrevBtn.textContent = '← Color';
         }
 
-        // Cerrar modal de rueda si estuviera abierto
-        if (modal && modal.classList.contains('active')) {
-            modal.classList.remove('active');
-            setTimeout(() => modal.setAttribute('hidden', ''), 280);
-        }
-
-        // Si estaba en el paso de color y pasó a minorista, redirigir a escudo
-        const activeColorStep = document.querySelector('#color-group.mobile-active-step');
-        if (activeColorStep && window.switchCustomizerStep) {
-            window.switchCustomizerStep('shield');
-        }
-
-        // Restablecer color de tira al original estándar (Gris Oscuro)
-        state.baseColor = 'original';
+        // En minorista, la base es EXCLUSIVAMENTE Gris Oscuro
+        state.baseColor = '#181818';
         state.baseName = 'Gris Oscuro';
         if (swatches) {
-            const origSwatch = swatches.querySelector('[data-color="original"]');
-            if (origSwatch) {
+            const activeSwatch = swatches.querySelector('[data-color="#181818"]') || swatches.querySelector('.color-swatch');
+            if (activeSwatch) {
                 swatches.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-                origSwatch.classList.add('active');
+                activeSwatch.classList.add('active');
             }
         }
     }
@@ -1113,13 +1132,123 @@ function updateQuantityMode(isMayorista) {
     drawText();
 }
 
-$('order-qty').addEventListener('change', (e) => {
-    state.quantity = e.target.value;
-    updateQuantityMode(state.quantity === 'mayorista');
-});
+// =====================================================================
+//  CONTROLADOR DE CANTIDAD (Input Numérico + Slider 1 a 3000 + Chips)
+// =====================================================================
+function initQuantityController() {
+    const qtyInput = $('qty-input');
+    const qtySlider = $('qty-slider');
+    const qtyMinus = $('qty-minus');
+    const qtyPlus = $('qty-plus');
+    const qtyChips = document.querySelectorAll('.qty-chip');
+    const scalePoints = document.querySelectorAll('.qty-slider-scale .scale-point');
+    const tierStatus = $('qty-tier-status');
+    const tierBadge = $('tier-pill-badge');
+    const tierRule = $('tier-color-rule');
+    const tierDesc = $('tier-status-desc');
+    const orderQtySelect = $('order-qty');
 
-// Sincronización inicial de cantidad
-updateQuantityMode(state.quantity === 'mayorista');
+    function setQuantity(val) {
+        val = parseInt(val, 10);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > 3000) val = 3000;
+
+        state.quantityNum = val;
+        const isMayorista = val >= 100;
+        state.quantity = isMayorista ? 'mayorista' : 'minorista';
+
+        if (qtyInput && parseInt(qtyInput.value, 10) !== val) {
+            qtyInput.value = val;
+        }
+        if (qtySlider && parseInt(qtySlider.value, 10) !== val) {
+            qtySlider.value = val;
+        }
+
+        // Actualizar barra de progreso del slider
+        if (qtySlider) {
+            const pct = ((val - 1) / (3000 - 1)) * 100;
+            qtySlider.style.setProperty('--slider-pct', `${pct}%`);
+        }
+
+        // Actualizar chips activos
+        qtyChips.forEach(chip => {
+            const chipVal = parseInt(chip.dataset.qty, 10);
+            chip.classList.toggle('active', chipVal === val);
+        });
+
+        // Actualizar tarjeta dinámica de estado
+        if (tierStatus) {
+            tierStatus.classList.toggle('minorista', !isMayorista);
+            tierStatus.classList.toggle('mayorista', isMayorista);
+        }
+        if (tierBadge) {
+            tierBadge.textContent = isMayorista ? `${val} pares · Mayorista` : `${val} ${val === 1 ? 'par' : 'pares'} · Minorista`;
+        }
+        if (tierRule) {
+            tierRule.innerHTML = isMayorista ? '✨ Tira a todo color y escudo libre' : '🔒 Solo tira Gris Oscuro';
+        }
+        if (tierDesc) {
+            tierDesc.innerHTML = isMayorista
+                ? '¡Desbloqueado! Tira en <strong>Blanco</strong>, <strong>Dorado</strong> o cualquier color de tu club + escudo a todo color.'
+                : 'Con menos de 100 pares la tira es exclusivamente en <strong>Gris Oscuro oficial FINTTA</strong> con grabado de escudo y dorsal. Deslizá a 100+ para desbloquear tiras blancas y colores de club.';
+        }
+
+        if (orderQtySelect) {
+            orderQtySelect.value = state.quantity;
+        }
+
+        updateQuantityMode(isMayorista);
+    }
+
+    if (qtySlider) {
+        qtySlider.addEventListener('input', (e) => setQuantity(e.target.value));
+    }
+
+    if (qtyInput) {
+        qtyInput.addEventListener('input', (e) => {
+            if (e.target.value === '') return;
+            setQuantity(e.target.value);
+        });
+        qtyInput.addEventListener('blur', (e) => {
+            setQuantity(e.target.value || 1);
+        });
+    }
+
+    if (qtyMinus) {
+        qtyMinus.addEventListener('click', () => {
+            const current = state.quantityNum || 1;
+            setQuantity(current - (current > 100 && current % 50 === 0 ? 50 : 1));
+        });
+    }
+
+    if (qtyPlus) {
+        qtyPlus.addEventListener('click', () => {
+            const current = state.quantityNum || 1;
+            setQuantity(current + (current >= 100 && current % 50 === 0 ? 50 : 1));
+        });
+    }
+
+    qtyChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const val = parseInt(chip.dataset.qty, 10);
+            if (!isNaN(val)) setQuantity(val);
+        });
+    });
+
+    scalePoints.forEach(sp => {
+        sp.addEventListener('click', () => {
+            const val = parseInt(sp.dataset.val, 10);
+            if (!isNaN(val)) setQuantity(val);
+        });
+    });
+
+    window.setCustomizerQuantity = setQuantity;
+
+    // Inicialización a 1 par
+    setQuantity(state.quantityNum || 1);
+}
+
+initQuantityController();
 
 bindSwatches('text-swatches', (color, name) => {
     state.textColor = color;
@@ -1196,7 +1325,7 @@ function convertFileToPng(file, applyRemoveWhite = true) {
                         return;
                     }
                     const rawName = (file.name || 'escudo').replace(/\.[^/.]+$/, '');
-                    const pngFileName = `${rawName}-finnta.png`;
+                    const pngFileName = `${rawName}-fintta.png`;
                     const pngFile = new File([blob], pngFileName, { type: 'image/png' });
                     const pngBlobUrl = URL.createObjectURL(blob);
 
@@ -1322,7 +1451,7 @@ const shieldDownloadBtn = $('shield-download');
 if (shieldDownloadBtn) {
     shieldDownloadBtn.addEventListener('click', () => {
         if (!state.shieldFile) return;
-        downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-finnta.png');
+        downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-fintta.png');
         toast('Descargando el escudo oficial de tu club ⚽');
     });
 }
@@ -1375,14 +1504,14 @@ $('order-btn').addEventListener('click', async () => {
 
     const text = state.text.trim().toUpperCase();
     const lines = [
-        '⚽ ¡Hola Finnta! Quiero encargar el pedido para mi equipo:',
+        '⚽ ¡Hola Fintta! Quiero encargar el pedido para mi equipo:',
         '',
         name ? `⚽ Solicitado por: ${name}` : null,
-        `📋 Plantel / Cantidad: ${state.quantity === 'mayorista' ? '100 pares o más (Mayorista)' : 'Menos de 100 pares (Minorista)'}`,
+        `📋 Plantel / Cantidad: ${state.quantityNum || 1} ${state.quantityNum === 1 ? 'par' : 'pares'} (${state.quantity === 'mayorista' ? 'Mayorista / Club' : 'Minorista - Tira Gris Oscuro'})`,
         `👟 Curva de talles: A coordinar por WhatsApp`,
-        `🎽 Color de tira: ${state.quantity === 'mayorista' ? state.baseName : 'Gris Oscuro (Estándar)'}`,
-        `⚽ Escudo del Club: ${state.shieldFile ? 'Sí (grabado en relieve)' : 'Sin escudo'}`,
-        `🔟 Dorsal / Grabado: ${text ? `${text}` : 'Sin dorsal'}`,
+        `🎽 Color de tira: ${state.baseName || 'Gris Oscuro (Oficial)'}`,
+        `⚽ Escudo del Club: ${state.shieldFile ? 'Sí (oficial)' : 'Sin escudo'}`,
+        `🔟 Dorsal: ${text ? `${text} (${state.textColorName || 'Dorado'})` : 'Sin dorsal'}`,
         `💵 Presupuesto unitario: ${PRICE_LABEL}`,
         '',
         'Te adjunto la vista previa 3D de mi diseño.',
@@ -1390,14 +1519,14 @@ $('order-btn').addEventListener('click', async () => {
     const message = lines.join('\n');
 
     const blob = await snapshotBlob();
-    const preview = new File([blob], 'finnta-mi-diseno.png', { type: 'image/png' });
+    const preview = new File([blob], 'fintta-mi-diseno.png', { type: 'image/png' });
     const files = state.shieldFile ? [preview, state.shieldFile] : [preview];
 
     // Celular: hoja de compartir nativa → WhatsApp con las imágenes adjuntas
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
     if (isTouch && navigator.canShare && navigator.canShare({ files })) {
         try {
-            await navigator.share({ files, text: message, title: 'Mi Finnta' });
+            await navigator.share({ files, text: message, title: 'Mi Fintta' });
             return;
         } catch (err) {
             if (err.name === 'AbortError') return;
@@ -1405,11 +1534,11 @@ $('order-btn').addEventListener('click', async () => {
     }
 
     // Escritorio: descarga la vista previa y abre el chat del proveedor
-    downloadBlob(blob, 'finnta-mi-diseno.png');
+    downloadBlob(blob, 'fintta-mi-diseno.png');
     if (state.shieldFile) {
-        setTimeout(() => downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-finnta.png'), 400);
+        setTimeout(() => downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-fintta.png'), 400);
     }
-    const waText = `${message}\n\n(📎 Se descargó "finnta-mi-diseno.png", adjuntala en este chat${state.shieldFile ? ' junto con tu escudo' : ''})`;
+    const waText = `${message}\n\n(📎 Se descargó "fintta-mi-diseno.png", adjuntala en este chat${state.shieldFile ? ' junto con tu escudo' : ''})`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waText)}`, '_blank', 'noopener');
     toast('Se descargó la ficha técnica de tu diseño: adjuntala en WhatsApp ⚽');
 });

@@ -1,0 +1,17 @@
+# Auto detect text files and perform LF normalization on checkout
+* text=auto
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.mp4 binary
+*.webm binary
+*.glb binary
+*.gltf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
