@@ -1609,29 +1609,65 @@ $('order-btn').addEventListener('click', async () => {
     ].filter((l) => l !== null);
     const message = lines.join('\n');
 
-    const blob = await snapshotBlob();
-    const preview = new File([blob], 'fintta-mi-diseno.png', { type: 'image/png' });
-    const files = state.shieldFile ? [preview, state.shieldFile] : [preview];
+    // Desactivar temporalmente el botón para prevenir dobles clics
+    const orderBtn = $('order-btn');
+    if (orderBtn) {
+        orderBtn.style.pointerEvents = 'none';
+        orderBtn.style.opacity = '0.7';
+    }
 
-    // Celular: hoja de compartir nativa → WhatsApp con las imágenes adjuntas
-    const isTouch = window.matchMedia('(pointer: coarse)').matches;
-    if (isTouch && navigator.canShare && navigator.canShare({ files })) {
-        try {
-            await navigator.share({ files, text: message, title: 'Mi Fintta' });
-            return;
-        } catch (err) {
-            if (err.name === 'AbortError') return;
+    try {
+        const blob = await snapshotBlob();
+
+        // 1. Descarga la vista previa en la galería / descargas del dispositivo
+        downloadBlob(blob, 'fintta-mi-diseno.png');
+        if (state.shieldFile) {
+            setTimeout(() => downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-fintta.png'), 350);
         }
-    }
 
-    // Escritorio: descarga la vista previa y abre el chat del proveedor
-    downloadBlob(blob, 'fintta-mi-diseno.png');
-    if (state.shieldFile) {
-        setTimeout(() => downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-fintta.png'), 400);
+        // 2. Intenta copiar la imagen al portapapeles (permite "Pegar" directo en WhatsApp en celulares y PC compatibles)
+        if (navigator.clipboard && window.ClipboardItem) {
+            try {
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+            } catch (_) {
+                // Si el navegador no permite escribir imágenes al clipboard, continúa normalmente
+            }
+        }
+
+        const waText = `${message}\n\n(📎 Te adjunto la foto de mi diseño "fintta-mi-diseno.png" que se guardó en mi galería${state.shieldFile ? ' y mi escudo' : ''})`;
+        const waUrl = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(waText)}`;
+
+        // Detección de celular / tablet
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                         (window.matchMedia('(pointer: coarse)').matches && window.innerWidth <= 1024);
+
+        if (isMobile) {
+            toast('¡Abriendo WhatsApp! Te guardamos la foto en la galería para adjuntarla 📸⚽');
+            // En celular, window.location.href abre la app de WhatsApp directo al chat de FINTTA sin ser bloqueado
+            setTimeout(() => {
+                window.location.href = waUrl;
+            }, 400);
+        } else {
+            toast('Se descargó la ficha técnica de tu diseño: adjuntala en WhatsApp ⚽');
+            const newWin = window.open(waUrl, '_blank', 'noopener');
+            if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+                window.location.href = waUrl;
+            }
+        }
+    } catch (err) {
+        console.error('Error al procesar pedido para WhatsApp:', err);
+        const fallbackUrl = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(message)}`;
+        window.location.href = fallbackUrl;
+    } finally {
+        setTimeout(() => {
+            if (orderBtn) {
+                orderBtn.style.pointerEvents = '';
+                orderBtn.style.opacity = '';
+            }
+        }, 2500);
     }
-    const waText = `${message}\n\n(📎 Se descargó "fintta-mi-diseno.png", adjuntala en este chat${state.shieldFile ? ' junto con tu escudo' : ''})`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waText)}`, '_blank', 'noopener');
-    toast('Se descargó la ficha técnica de tu diseño: adjuntala en WhatsApp ⚽');
 });
 
 // ---------------------------------------------------------------------
