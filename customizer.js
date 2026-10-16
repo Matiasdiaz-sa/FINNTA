@@ -1,29 +1,15 @@
-// =====================================================================
-//  FINTTA · Personalizador 3D
-//  El escudo y el texto se PROYECTAN sobre la malla real de la sandalia
-//  (DecalGeometry de Three.js). No son capas HTML: son geometría 3D que
-//  copia la curvatura de la tira, recibe la luz y gira con el modelo.
-//  Funciona aunque el UV del .glb (generado por IA) esté desordenado.
-// =====================================================================
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { DecalGeometry } from 'three/addons/geometries/DecalGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-// ---------------------------------------------------------------------
-//  CONFIGURACIÓN
-// ---------------------------------------------------------------------
-// Número de WhatsApp oficial para recibir pedidos (formato internacional)
 const WHATSAPP_NUMBER = '5491155622736';
 const MODEL_URL = 'Sin_nombre.glb';
 const PRICE_LABEL = '$25.000 ARS';
-const DECAL_DEPTH = 0.12;            // profundidad de proyección (unidades del modelo)
+const DECAL_DEPTH = 0.12;
 const TEXT_CANVAS = { w: 1024, h: 384 };
 
-// ---------------------------------------------------------------------
-//  DOM
-// ---------------------------------------------------------------------
 const $ = (id) => document.getElementById(id);
 const canvas = $('customizer-canvas');
 const stage = $('preview-stage');
@@ -34,14 +20,11 @@ const loaderText = $('stage-loader-text');
 const hintTarget = $('hint-target');
 const toastEl = $('toast');
 
-// ---------------------------------------------------------------------
-//  ESCENA
-// ---------------------------------------------------------------------
 const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
     alpha: true,
-    preserveDrawingBuffer: true, // para poder sacar la captura del diseño
+    preserveDrawingBuffer: true,
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -67,7 +50,6 @@ controls.autoRotate = true;
 controls.autoRotateSpeed = 0.9;
 controls.addEventListener('start', () => { controls.autoRotate = false; });
 
-// Luces
 const keyLight = new THREE.DirectionalLight(0xffffff, 1.7);
 keyLight.position.set(2, 4, 2.5);
 keyLight.castShadow = true;
@@ -87,7 +69,6 @@ rimLight.position.set(-3, 2, -2);
 scene.add(rimLight);
 scene.add(new THREE.HemisphereLight(0xffffff, 0xdfe6df, 0.45));
 
-// Piso que solo recibe sombra
 const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(12, 12),
     new THREE.ShadowMaterial({ opacity: 0.16 })
@@ -96,14 +77,11 @@ floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 scene.add(floor);
 
-// ---------------------------------------------------------------------
-//  ESTADO
-// ---------------------------------------------------------------------
-let sandal = null;          // THREE.Mesh de la sandalia
-let baseMat = null;         // material original
-let originalMap = null;     // textura negra original
+let sandal = null;
+let baseMat = null;
+let originalMap = null;
 let modelBox = null;
-let toe = new THREE.Vector3(1, 0, 0); // dirección hacia la punta
+let toe = new THREE.Vector3(1, 0, 0);
 let homeView = null;
 let activeTarget = 'shield';
 
@@ -129,19 +107,17 @@ function makeDecalMaterial(texture) {
         polygonOffset: true,
         polygonOffsetFactor: -4,
         polygonOffsetUnits: -4,
-        roughness: 0.5,   // un poco más brillante que la goma: parece estampa/vinilo
+        roughness: 0.5,
         metalness: 0,
     });
 }
 
-// Canvas de texto (se actualiza en vivo sin regenerar geometría)
 const textCanvas = document.createElement('canvas');
 textCanvas.width = TEXT_CANVAS.w;
 textCanvas.height = TEXT_CANVAS.h;
 const textTexture = new THREE.CanvasTexture(textCanvas);
 textTexture.colorSpace = THREE.SRGBColorSpace;
 
-// Canvas del escudo
 const shieldCanvas = document.createElement('canvas');
 shieldCanvas.width = shieldCanvas.height = 1024;
 const shieldTexture = new THREE.CanvasTexture(shieldCanvas);
@@ -160,9 +136,6 @@ const decals = {
     },
 };
 
-// ---------------------------------------------------------------------
-//  RAYCAST HELPERS
-// ---------------------------------------------------------------------
 const pickRay = new THREE.Raycaster();
 const helperRay = new THREE.Raycaster();
 const V_DOWN = new THREE.Vector3(0, -1, 0);
@@ -181,8 +154,6 @@ function castDown(x, z) {
     return helperRay.intersectObject(sandal, false)[0] || null;
 }
 
-// Normal promediada en un pequeño radio: evita que la calcomanía se tuerza
-// por el "ruido" de triángulos típico de las mallas generadas por IA.
 function smoothNormal(point, approx) {
     const n = approx.clone().normalize();
     const t1 = new THREE.Vector3().crossVectors(n, Math.abs(n.y) < 0.9 ? V_Y : V_X).normalize();
@@ -205,7 +176,6 @@ function smoothNormal(point, approx) {
     return acc.lengthSq() > 0 ? acc.normalize() : n;
 }
 
-// Encuentra la tira superior (la parte más alta de la sandalia a lo largo del largo)
 function analyzeStrap() {
     const cz = (modelBox.min.z + modelBox.max.z) / 2;
     const samples = [];
@@ -219,7 +189,7 @@ function analyzeStrap() {
     const minX = Math.min(...xs);
     const maxX = Math.max(...xs);
     const center = (minX + maxX) / 2;
-    // En una ojota, la tira está más cerca de la punta que del talón
+
     toe = new THREE.Vector3(Math.sign(center) || 1, 0, 0);
     return { center, length: Math.max(maxX - minX, 0.2), cz };
 }
@@ -231,12 +201,9 @@ function surfaceAt(x, z) {
     return { point: h.point.clone(), normal: n };
 }
 
-// ---------------------------------------------------------------------
-//  DECALS (proyección sobre la malla)
-// ---------------------------------------------------------------------
 function orientationFor(normal, rotDeg) {
     const z = normal.clone().normalize();
-    // "arriba" de la imagen = hacia la punta, proyectado sobre la superficie
+
     let up = toe.clone().addScaledVector(z, -toe.dot(z));
     if (up.lengthSq() < 1e-4) up = new THREE.Vector3(0, 0, 1).addScaledVector(z, -z.z);
     up.normalize();
@@ -248,7 +215,6 @@ function orientationFor(normal, rotDeg) {
     return new THREE.Euler().setFromRotationMatrix(m);
 }
 
-// Descarta triángulos que miran hacia otro lado (parte de abajo de la tira, costados)
 function keepFacing(geo, normal) {
     const pos = geo.attributes.position.array;
     const nor = geo.attributes.normal.array;
@@ -297,9 +263,6 @@ function buildDecal(key) {
     scene.add(d.mesh);
 }
 
-// ---------------------------------------------------------------------
-//  TEXTURAS DINÁMICAS
-// ---------------------------------------------------------------------
 function drawText() {
     const ctx = textCanvas.getContext('2d');
     const { w: W, h: H } = TEXT_CANVAS;
@@ -315,7 +278,7 @@ function drawText() {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.lineJoin = 'round';
-        // borde sutil para que se lea sobre cualquier color de base
+
         ctx.lineWidth = fs * 0.07;
         if (state.quantity === 'minorista') {
             ctx.fillStyle = '#111111';
@@ -335,7 +298,6 @@ function isLight(hex) {
     return (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) > 0.6;
 }
 
-// Algoritmo de flood-fill para borrar fondo blanco conectado al borde
 function removeWhiteBackground(ctx, w, h) {
     const data = ctx.getImageData(0, 0, w, h);
     const p = data.data;
@@ -374,7 +336,6 @@ function removeWhiteBackground(ctx, w, h) {
     ctx.putImageData(data, 0, 0);
 }
 
-// Dibuja el escudo centrado y, si se pide, borra el fondo blanco conectado al borde
 function drawShield() {
     const img = state.shieldImage;
     const S = shieldCanvas.width;
@@ -397,13 +358,10 @@ function drawShield() {
         removeWhiteBackground(ctx, S, S);
     }
 
-    // Efecto grabado láser en gris de alta definición (para minoristas)
-    // El grabado se realiza en relieve tono gris oficial sobre la capellada
     if (state.quantity === 'minorista') {
         const data2 = ctx.getImageData(0, 0, S, S);
         const p2 = data2.data;
 
-        // Comprobar si la imagen tiene transparencia y si los trazos son oscuros o claros
         let opaqueCount = 0;
         let totalLum = 0;
         let hasAlpha = false;
@@ -417,7 +375,7 @@ function drawShield() {
             }
         }
         const avgOpaqueLum = opaqueCount > 0 ? (totalLum / opaqueCount) : 128;
-        // Si ya es transparente y el diseño es claro/blanco, no invertimos para no borrarlo
+
         const invertLum = !hasAlpha || avgOpaqueLum < 160;
 
         for (let i = 0; i < p2.length; i += 4) {
@@ -426,10 +384,10 @@ function drawShield() {
                 const lum = 0.299 * p2[i] + 0.587 * p2[i + 1] + 0.114 * p2[i + 2];
                 const intensity = invertLum ? Math.max(0, 1 - (lum / 255)) : Math.min(1, Math.max(0.25, lum / 255));
                 p2[i + 3] = a * Math.pow(intensity, 1.2);
-                // Grabado láser en gris (#C2C2C2)
-                p2[i] = 194;     // R
-                p2[i + 1] = 194; // G
-                p2[i + 2] = 194; // B
+
+                p2[i] = 194;
+                p2[i + 1] = 194;
+                p2[i + 2] = 194;
             }
         }
         ctx.putImageData(data2, 0, 0);
@@ -438,16 +396,13 @@ function drawShield() {
     shieldTexture.needsUpdate = true;
 }
 
-// ---------------------------------------------------------------------
-//  COLOR DE BASE (material real del modelo)
-// ---------------------------------------------------------------------
 function applyBaseColor() {
     if (!baseMat) return;
     const isMayorista = state.quantity === 'mayorista';
 
     let actualHex = state.baseColor;
     if (!isMayorista) {
-        // En minorista (menos de 100 unidades): exclusivamente tira Negra oficial
+
         actualHex = '#181818';
         state.baseColor = '#181818';
         state.baseName = 'Negro';
@@ -472,7 +427,6 @@ function applyBaseColor() {
     }
     baseMat.needsUpdate = true;
 
-    // Sincronizar estado visual del botón móvil y rueda
     const statusDot = $('wheel-status-dot');
     const statusName = $('wheel-status-name');
     const previewSwatch = $('wheel-preview-swatch');
@@ -483,9 +437,6 @@ function applyBaseColor() {
     if (previewHex) previewHex.textContent = (actualHex.startsWith('#') ? actualHex : '#181818').toUpperCase();
 }
 
-// ---------------------------------------------------------------------
-//  CÁMARA
-// ---------------------------------------------------------------------
 function fitDistance() {
     if (!modelBox) return 2.6;
     const r = modelBox.getBoundingSphere(new THREE.Sphere()).radius;
@@ -499,7 +450,7 @@ function fitDistance() {
 function computeHomeView() {
     const target = modelBox.getCenter(new THREE.Vector3());
     target.y = (modelBox.min.y + modelBox.max.y) * 0.5 + 0.02;
-    // Perspectiva 3/4 hero: muestra la tira frontal con el escudo y el dorsal de frente
+
     const dir = new THREE.Vector3(-0.65, 0.95, 1.25).normalize();
     return { target, dir };
 }
@@ -529,7 +480,6 @@ function resize() {
 new ResizeObserver(resize).observe(stage);
 resize();
 
-// Centrar inmediatamente al abrir el modal en móvil y frenar rotación automática
 const handleStudioOpen = () => {
     controls.autoRotate = false;
     setTimeout(() => {
@@ -540,9 +490,6 @@ const handleStudioOpen = () => {
 window.addEventListener('fintta:studio-open', handleStudioOpen);
 window.addEventListener('finnta:studio-open', handleStudioOpen);
 
-// ---------------------------------------------------------------------
-//  CARGA DEL MODELO
-// ---------------------------------------------------------------------
 const loader = new GLTFLoader();
 loader.load(
     MODEL_URL,
@@ -562,7 +509,6 @@ loader.load(
 
         if (!strapMesh || !soleMesh) return showLoaderError('El modelo no está dividido en dos partes.');
 
-        // Usamos la tira como "sandal" para que los estampados se proyecten solo ahí
         sandal = strapMesh;
 
         scene.add(gltf.scene);
@@ -582,7 +528,6 @@ loader.load(
         strapMesh.material = baseMat;
         originalMap = null;
 
-        // Monograma oficial FINTTA en relieve gris sobre UN SOLO lado (lateral exterior del talón)
         addSoleHeelLogos(gltf.scene);
 
         modelBox = new THREE.Box3().setFromObject(gltf.scene);
@@ -604,7 +549,7 @@ loader.load(
         homeView = computeHomeView();
         goHome();
 
-        try { await document.fonts.load('900 100px Outfit'); } catch (e) { /* usa fallback */ }
+        try { await document.fonts.load('900 100px Outfit'); } catch (e) {  }
         drawShield();
         drawText();
         buildDecal('shield');
@@ -632,7 +577,7 @@ loader.load(
         showLoaderError('No se pudo cargar el modelo 3D. Abrí la página con un servidor local (ej: Live Server).');
         const realLoader = window.FinttaRealLoader || window.FinntaRealLoader;
         if (realLoader) {
-            realLoader.onModelReady(); // Fallback so loader continues
+            realLoader.onModelReady();
         }
     }
 );
@@ -642,9 +587,6 @@ function showLoaderError(msg) {
     loaderText.textContent = msg;
 }
 
-// ---------------------------------------------------------------------
-//  RENDER LOOP (se pausa cuando la sección no está en pantalla)
-// ---------------------------------------------------------------------
 let onScreen = true;
 new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; }).observe(stage);
 renderer.setAnimationLoop(() => {
@@ -653,16 +595,13 @@ renderer.setAnimationLoop(() => {
     renderer.render(scene, camera);
 });
 
-// ---------------------------------------------------------------------
-//  INTERACCIÓN: tocar la sandalia para ubicar el escudo / texto
-// ---------------------------------------------------------------------
 let downAt = null;
 canvas.addEventListener('pointerdown', (e) => { downAt = { x: e.clientX, y: e.clientY }; });
 canvas.addEventListener('pointerup', (e) => {
     if (!downAt || !sandal) return;
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     downAt = null;
-    if (moved > 6) return; // fue un arrastre para girar
+    if (moved > 6) return;
 
     const rect = canvas.getBoundingClientRect();
     const ndc = new THREE.Vector2(
@@ -697,9 +636,6 @@ function setActiveTarget(t) {
 
 $('btn-reset-view').addEventListener('click', goHome);
 
-// ---------------------------------------------------------------------
-//  CONTROLES
-// ---------------------------------------------------------------------
 function bindSwatches(containerId, onPick) {
     const wrap = $(containerId);
     wrap.querySelectorAll('.color-swatch').forEach((sw) => {
@@ -724,7 +660,6 @@ bindSwatches('base-swatches', (color, name) => {
     drawShield();
     drawText();
     
-    // Deselect color picker wrapper if a standard swatch is clicked
     const wrapper = $('base-swatches').querySelector('.color-picker-wrapper');
     if (wrapper) wrapper.classList.remove('active');
 });
@@ -745,9 +680,6 @@ $('base-color-picker').addEventListener('input', (e) => {
     applyBaseColor();
 });
 
-// =====================================================================
-//  RUEDA CROMÁTICA INTERACTIVA (Color Wheel Modal)
-// =====================================================================
 (function initColorWheel() {
     const modal = document.getElementById('color-wheel-modal');
     const backdrop = document.getElementById('color-wheel-backdrop');
@@ -774,7 +706,6 @@ $('base-color-picker').addEventListener('input', (e) => {
     canvas.height = SIZE * DPR;
     ctx.scale(DPR, DPR);
 
-    // Canvas fuera de pantalla para rendimiento 60 FPS
     const offCanvas = document.createElement('canvas');
     offCanvas.width = SIZE * DPR;
     offCanvas.height = SIZE * DPR;
@@ -799,13 +730,11 @@ $('base-color-picker').addEventListener('input', (e) => {
                     const angle = Math.atan2(dy, dx);
                     const hue = ((angle * 180 / Math.PI) + 360) % 360;
 
-                    // HSV con V = 1.0
                     const f = (n, k = (n + hue / 60) % 6) => 1 - sat * Math.max(Math.min(k, 4 - k, 1), 0);
                     data[idx] = Math.round(f(5) * 255);
                     data[idx + 1] = Math.round(f(3) * 255);
                     data[idx + 2] = Math.round(f(1) * 255);
 
-                    // Borde exterior suavizado (antialiasing)
                     if (dist > rActual - 1.5) {
                         data[idx + 3] = Math.round(Math.max(0, Math.min(1, rActual - dist)) * 255);
                     } else {
@@ -829,7 +758,6 @@ $('base-color-picker').addEventListener('input', (e) => {
         ctx.clearRect(0, 0, SIZE, SIZE);
         ctx.drawImage(offCanvas, 0, 0, SIZE, SIZE);
 
-        // Capa de atenuación según el brillo (V)
         if (curVal < 1) {
             ctx.save();
             ctx.beginPath();
@@ -877,7 +805,6 @@ $('base-color-picker').addEventListener('input', (e) => {
         const { hex } = hsvToRgb(curHue, curSat, curVal);
         const pureHueSat = hsvToRgb(curHue, curSat, 1).hex;
 
-        // Posición del selector (knob)
         const angle = curHue * Math.PI / 180;
         const dist = curSat * RADIUS;
         const kx = RADIUS + Math.cos(angle) * dist;
@@ -886,7 +813,6 @@ $('base-color-picker').addEventListener('input', (e) => {
         knob.style.top = `${ky}px`;
         knob.style.backgroundColor = hex;
 
-        // Previsualizaciones
         if (previewSwatch) previewSwatch.style.backgroundColor = hex;
         if (previewHex) previewHex.textContent = hex.toUpperCase();
 
@@ -895,7 +821,6 @@ $('base-color-picker').addEventListener('input', (e) => {
         if (statusDot) statusDot.style.backgroundColor = hex;
         if (statusName) statusName.textContent = customName || state.baseName || hex.toUpperCase();
 
-        // Barra de brillo
         if (brightnessSlider) {
             brightnessSlider.style.background = `linear-gradient(to right, #000000, ${pureHueSat})`;
             brightnessSlider.value = Math.round(curVal * 100);
@@ -904,7 +829,6 @@ $('base-color-picker').addEventListener('input', (e) => {
             brightnessVal.textContent = `${Math.round(curVal * 100)}%`;
         }
 
-        // Actualizar sandalia 3D en tiempo real
         if (triggerModelUpdate) {
             state.baseColor = hex;
             state.baseName = customName || "Personalizado";
@@ -1012,7 +936,6 @@ $('base-color-picker').addEventListener('input', (e) => {
         });
     }
 
-    // En escritorio, al hacer clic sobre el wrapper de la rueda multicolor también abre la rueda interactiva
     const desktopColorWrap = document.querySelector('#base-swatches .color-picker-wrapper');
     if (desktopColorWrap) {
         desktopColorWrap.addEventListener('click', (e) => {
@@ -1032,7 +955,6 @@ $('base-color-picker').addEventListener('input', (e) => {
     if (backdrop) backdrop.addEventListener('click', closeModal);
     if (confirmBtn) confirmBtn.addEventListener('click', closeModal);
 
-    // Sincronización inicial
     applyBaseColor();
 })();
 
@@ -1077,7 +999,6 @@ function updateQuantityMode(isMayorista) {
         }
         if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club';
 
-        // Numeración mayorista (+100 pares): 5 pasos
         if (shieldStepNum) shieldStepNum.textContent = 'Paso 3';
         if (textStepNum) textStepNum.textContent = 'Paso 4';
         if (orderStepNum) orderStepNum.textContent = 'Paso 5';
@@ -1094,14 +1015,13 @@ function updateQuantityMode(isMayorista) {
             shieldPrevBtn.textContent = '← Color';
         }
 
-        // Mobile wheel trigger button habilitado para clubes
         if (mobileBtn) {
             mobileBtn.classList.remove('locked');
             if (badgeText) badgeText.textContent = 'Personalizar';
             if (badgeIcon) badgeIcon.style.display = 'inline-block';
         }
     } else {
-        // Modo Minorista (menos de 100 pares): SOLO GRIS OSCURO
+
         if (swatches) {
             swatches.classList.remove('disabled');
             swatches.style.opacity = '1';
@@ -1118,7 +1038,6 @@ function updateQuantityMode(isMayorista) {
         }
         if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club';
 
-        // Pasos completos y claros
         if (shieldStepNum) shieldStepNum.textContent = 'Paso 3';
         if (textStepNum) textStepNum.textContent = 'Paso 4';
         if (orderStepNum) orderStepNum.textContent = 'Paso 5';
@@ -1135,7 +1054,6 @@ function updateQuantityMode(isMayorista) {
             shieldPrevBtn.textContent = '← Color';
         }
 
-        // En minorista, la base es EXCLUSIVAMENTE Negro
         state.baseColor = '#181818';
         state.baseName = 'Negro';
         if (swatches) {
@@ -1146,7 +1064,6 @@ function updateQuantityMode(isMayorista) {
             }
         }
 
-        // En dorsal / texto: EXCLUSIVAMENTE Negro en menos de 100 unidades
         state.textColor = '#111111';
         state.textColorName = 'Negro';
         if (textSwatches) {
@@ -1165,9 +1082,6 @@ function updateQuantityMode(isMayorista) {
     drawText();
 }
 
-// =====================================================================
-//  CONTROLADOR DE CANTIDAD (Input Numérico + Slider 1 a 3000 + Chips)
-// =====================================================================
 function initQuantityController() {
     const qtyInput = $('qty-input');
     const qtySlider = $('qty-slider');
@@ -1197,7 +1111,6 @@ function initQuantityController() {
             qtySlider.value = val;
         }
 
-        // Actualizar barra de progreso del slider
         if (qtySlider) {
             const pct = ((val - 1) / (3000 - 1)) * 100;
             qtySlider.style.setProperty('--slider-pct', `${pct}%`);
@@ -1208,7 +1121,6 @@ function initQuantityController() {
             unitTag.textContent = val === 1 ? 'par' : 'pares';
         }
 
-        // Actualizar etiqueta de categoría arriba de la barra
         if (tierBadge) {
             tierBadge.className = `qty-clean-badge ${isMayorista ? 'mayorista' : 'minorista'}`;
             tierBadge.innerHTML = isMayorista ? '✦ Mayorista (+100)' : 'Minorista (&lt; 100)';
@@ -1265,7 +1177,6 @@ function initQuantityController() {
 
     window.setCustomizerQuantity = setQuantity;
 
-    // Inicialización a 1 par
     setQuantity(state.quantityNum || 1);
 }
 
@@ -1299,7 +1210,6 @@ $('text-color-picker').addEventListener('input', (e) => {
     drawText();
 });
 
-// Monograma oficial FINTTA grabado en gris en el lateral del talón de la suela
 function addSoleHeelLogos(rootScene) {
     const greyMat = new THREE.MeshStandardMaterial({
         color: 0xBFBFBF,
@@ -1309,7 +1219,7 @@ function addSoleHeelLogos(rootScene) {
 
     function createMonogram() {
         const group = new THREE.Group();
-        // Curva del monograma: barra superior horizontal hacia la punta, esquina redondeada, bajada hacia abajo
+
         const p0 = new THREE.Vector3(-0.038, 0.025, 0);
         const p1 = new THREE.Vector3(0.015, 0.025, 0);
         const p2 = new THREE.Vector3(0.025, -0.025, 0);
@@ -1320,7 +1230,6 @@ function addSoleHeelLogos(rootScene) {
         tubeMesh.castShadow = true;
         group.add(tubeMesh);
 
-        // Balón central en el ángulo interior
         const ballGeo = new THREE.SphereGeometry(0.0065, 16, 16);
         const ballMesh = new THREE.Mesh(ballGeo, greyMat);
         ballMesh.position.set(-0.008, -0.002, 0);
@@ -1331,7 +1240,6 @@ function addSoleHeelLogos(rootScene) {
         return group;
     }
 
-    // Lado exterior del talón (un solo lado según indicación de diseño)
     const outerLogo = createMonogram();
     outerLogo.position.set(0.67, -0.172, 0.222);
     outerLogo.rotation.set(0, 0.16, 0);
@@ -1378,7 +1286,6 @@ $('text-rot').addEventListener('input', (e) => {
     buildDecal('text');
 });
 
-// Conversión automática de cualquier formato de imagen a PNG transparente
 function convertFileToPng(file, applyRemoveWhite = true) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1440,7 +1347,6 @@ function convertFileToPng(file, applyRemoveWhite = true) {
     });
 }
 
-// Escudo: acepta cualquier imagen y la transforma a PNG
 async function handleShieldFile(file) {
     if (!file) return;
     const isImage = (file.type && file.type.startsWith('image/')) || 
@@ -1494,7 +1400,6 @@ $('shield-upload').addEventListener('change', (e) => {
     handleShieldFile(e.target.files[0]);
 });
 
-// Drag and drop del escudo
 const uploadLabel = $('upload-label');
 uploadLabel.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -1563,11 +1468,8 @@ $('shield-remove').addEventListener('click', () => {
     toast('Escudo eliminado. Tira limpia.');
 });
 
-// ---------------------------------------------------------------------
-//  PEDIDO → WHATSAPP
-// ---------------------------------------------------------------------
 function snapshotBlob() {
-    // Fondo blanco para la captura (WhatsApp vuelve negro lo transparente)
+
     const prevBg = scene.background;
     scene.background = new THREE.Color(0xffffff);
     renderer.render(scene, camera);
@@ -1609,7 +1511,6 @@ $('order-btn').addEventListener('click', async () => {
     ].filter((l) => l !== null);
     const message = lines.join('\n');
 
-    // Desactivar temporalmente el botón para prevenir dobles clics
     const orderBtn = $('order-btn');
     if (orderBtn) {
         orderBtn.style.pointerEvents = 'none';
@@ -1619,33 +1520,30 @@ $('order-btn').addEventListener('click', async () => {
     try {
         const blob = await snapshotBlob();
 
-        // 1. Descarga la vista previa en la galería / descargas del dispositivo
         downloadBlob(blob, 'fintta-mi-diseno.png');
         if (state.shieldFile) {
             setTimeout(() => downloadBlob(state.shieldFile, state.shieldFile.name || 'escudo-fintta.png'), 350);
         }
 
-        // 2. Intenta copiar la imagen al portapapeles (permite "Pegar" directo en WhatsApp en celulares y PC compatibles)
         if (navigator.clipboard && window.ClipboardItem) {
             try {
                 await navigator.clipboard.write([
                     new ClipboardItem({ 'image/png': blob })
                 ]);
             } catch (_) {
-                // Si el navegador no permite escribir imágenes al clipboard, continúa normalmente
+
             }
         }
 
         const waText = `${message}\n\n(📎 Te adjunto la foto de mi diseño "fintta-mi-diseno.png" que se guardó en mi galería${state.shieldFile ? ' y mi escudo' : ''})`;
         const waUrl = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(waText)}`;
 
-        // Detección de celular / tablet
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                          (window.matchMedia('(pointer: coarse)').matches && window.innerWidth <= 1024);
 
         if (isMobile) {
             toast('¡Abriendo WhatsApp! Te guardamos la foto en la galería para adjuntarla 📸⚽');
-            // En celular, window.location.href abre la app de WhatsApp directo al chat de FINTTA sin ser bloqueado
+
             setTimeout(() => {
                 window.location.href = waUrl;
             }, 400);
@@ -1670,9 +1568,6 @@ $('order-btn').addEventListener('click', async () => {
     }
 });
 
-// ---------------------------------------------------------------------
-//  TOAST
-// ---------------------------------------------------------------------
 let toastTimer = null;
 function toast(msg) {
     if (!toastEl) return;
