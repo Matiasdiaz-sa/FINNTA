@@ -111,7 +111,7 @@ const state = {
     quantity: 'minorista',
     quantityNum: 1,
     baseColor: '#181818',
-    baseName: 'Gris Oscuro',
+    baseName: 'Negro',
     text: '10',
     textColor: '#111111',
     textColorName: 'Negro',
@@ -392,21 +392,39 @@ function drawShield() {
         removeWhiteBackground(ctx, S, S);
     }
 
-    // Efecto "grabado / estampa dorada" de alta gama (para minoristas)
-    // Aplica el tono dorado oficial FINTTA a los relieves del escudo
+    // Efecto grabado láser en gris de alta definición (para minoristas)
+    // El grabado se realiza en relieve tono gris oficial sobre la capellada
     if (state.quantity === 'minorista') {
         const data2 = ctx.getImageData(0, 0, S, S);
         const p2 = data2.data;
+
+        // Comprobar si la imagen tiene transparencia y si los trazos son oscuros o claros
+        let opaqueCount = 0;
+        let totalLum = 0;
+        let hasAlpha = false;
+        for (let i = 0; i < p2.length; i += 16) {
+            const a = p2[i + 3];
+            if (a < 20) {
+                hasAlpha = true;
+            } else {
+                opaqueCount++;
+                totalLum += 0.299 * p2[i] + 0.587 * p2[i + 1] + 0.114 * p2[i + 2];
+            }
+        }
+        const avgOpaqueLum = opaqueCount > 0 ? (totalLum / opaqueCount) : 128;
+        // Si ya es transparente y el diseño es claro/blanco, no invertimos para no borrarlo
+        const invertLum = !hasAlpha || avgOpaqueLum < 160;
+
         for (let i = 0; i < p2.length; i += 4) {
             const a = p2[i + 3];
             if (a > 0) {
                 const lum = 0.299 * p2[i] + 0.587 * p2[i + 1] + 0.114 * p2[i + 2];
-                const darkness = Math.max(0, 1 - (lum / 255));
-                p2[i + 3] = a * Math.pow(darkness, 1.2);
-                // Tono dorado oficial metalizado (#D4AF37)
-                p2[i] = 212;     // R
-                p2[i + 1] = 175; // G
-                p2[i + 2] = 55;  // B
+                const intensity = invertLum ? Math.max(0, 1 - (lum / 255)) : Math.min(1, Math.max(0.25, lum / 255));
+                p2[i + 3] = a * Math.pow(intensity, 1.2);
+                // Grabado láser en gris (#C2C2C2)
+                p2[i] = 194;     // R
+                p2[i + 1] = 194; // G
+                p2[i + 2] = 194; // B
             }
         }
         ctx.putImageData(data2, 0, 0);
@@ -424,15 +442,15 @@ function applyBaseColor() {
 
     let actualHex = state.baseColor;
     if (!isMayorista) {
-        // En minorista (menos de 100 unidades): exclusivamente tira Gris Oscuro oficial
+        // En minorista (menos de 100 unidades): exclusivamente tira Negra oficial
         actualHex = '#181818';
         state.baseColor = '#181818';
-        state.baseName = 'Gris Oscuro';
+        state.baseName = 'Negro';
         baseMat.color.set(0x181818);
     } else if (state.baseColor === 'original' || state.baseColor === '#181818' || state.baseColor === '#141414') {
         actualHex = '#181818';
         state.baseColor = '#181818';
-        state.baseName = 'Gris Oscuro';
+        state.baseName = 'Negro';
         baseMat.color.set(0x181818);
     } else if (state.baseColor === '#F5F5F5' || state.baseColor === 'white' || state.baseColor === '#ffffff') {
         actualHex = '#F5F5F5';
@@ -693,7 +711,7 @@ function bindSwatches(containerId, onPick) {
 
 bindSwatches('base-swatches', (color, name) => {
     if (state.quantity !== 'mayorista' && color !== '#181818' && color !== 'original' && color !== '#141414') {
-        toast('Con menos de 100 unidades la tira es en Gris Oscuro oficial. Para otros colores elegí 100 pares o más.');
+        toast('Con menos de 100 unidades la tira es en Negro oficial. Para otros colores elegí 100 pares o más.');
         return;
     }
     state.baseColor = color;
@@ -1053,9 +1071,9 @@ function updateQuantityMode(isMayorista) {
         }
         if (heading) {
             heading.classList.remove('disabled-text');
-            heading.textContent = 'Color de tira (Clubes y Mayorista)';
+            heading.textContent = 'Color de tira';
         }
-        if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club (A todo color)';
+        if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club';
 
         // Numeración mayorista (+100 pares): 5 pasos
         if (shieldStepNum) shieldStepNum.textContent = 'Paso 3';
@@ -1094,9 +1112,9 @@ function updateQuantityMode(isMayorista) {
         }
         if (heading) {
             heading.classList.remove('disabled-text');
-            heading.textContent = 'Color de tira (Gris Oscuro Oficial)';
+            heading.textContent = 'Color de tira';
         }
-        if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club (Grabado Dorado)';
+        if (shieldHeading) shieldHeading.textContent = 'Escudo de tu club';
 
         // Pasos completos y claros
         if (shieldStepNum) shieldStepNum.textContent = 'Paso 3';
@@ -1115,9 +1133,9 @@ function updateQuantityMode(isMayorista) {
             shieldPrevBtn.textContent = '← Color';
         }
 
-        // En minorista, la base es EXCLUSIVAMENTE Gris Oscuro
+        // En minorista, la base es EXCLUSIVAMENTE Negro
         state.baseColor = '#181818';
-        state.baseName = 'Gris Oscuro';
+        state.baseName = 'Negro';
         if (swatches) {
             const activeSwatch = swatches.querySelector('[data-color="#181818"]') || swatches.querySelector('.color-swatch');
             if (activeSwatch) {
@@ -1516,11 +1534,11 @@ $('order-btn').addEventListener('click', async () => {
         '⚽ ¡Hola Fintta! Quiero encargar el pedido para mi equipo:',
         '',
         name ? `⚽ Solicitado por: ${name}` : null,
-        `📋 Plantel / Cantidad: ${state.quantityNum || 1} ${state.quantityNum === 1 ? 'par' : 'pares'} (${state.quantity === 'mayorista' ? 'Mayorista / Club' : 'Minorista - Tira Gris Oscuro'})`,
+        `📋 Plantel / Cantidad: ${state.quantityNum || 1} ${state.quantityNum === 1 ? 'par' : 'pares'} (${state.quantity === 'mayorista' ? 'Mayorista / Club' : 'Minorista - Tira Negra'})`,
         `👟 Curva de talles: A coordinar por WhatsApp`,
-        `🎽 Color de tira: ${state.baseName || 'Gris Oscuro (Oficial)'}`,
-        `⚽ Escudo del Club: ${state.shieldFile ? 'Sí (oficial)' : 'Sin escudo'}`,
-        `🔟 Dorsal: ${text ? `${text} (${state.textColorName || 'Dorado'})` : 'Sin dorsal'}`,
+        `🎽 Color de tira: ${state.baseName || 'Negro (Oficial)'}`,
+        `⚽ Escudo del Club: ${state.shieldFile ? (state.quantity === 'minorista' ? 'Sí (Grabado en Gris oficial)' : 'Sí (A todo color)') : 'Sin escudo'}`,
+        `🔟 Dorsal: ${text ? `${text} (${state.quantity === 'minorista' ? 'Negro oficial' : (state.textColorName || 'Negro')})` : 'Sin dorsal'}`,
         `💵 Presupuesto unitario: ${PRICE_LABEL}`,
         '',
         'Te adjunto la vista previa 3D de mi diseño.',
