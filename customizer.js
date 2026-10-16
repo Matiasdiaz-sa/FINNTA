@@ -112,7 +112,7 @@ const state = {
     quantityNum: 1,
     baseColor: '#181818',
     baseName: 'Negro',
-    text: '10',
+    text: '',
     textColor: '#111111',
     textColorName: 'Negro',
     shieldFile: null,
@@ -156,7 +156,7 @@ const decals = {
     text: {
         mesh: null, point: null, normal: null,
         baseSize: 0.36, scale: 1, rot: 0, aspect: TEXT_CANVAS.h / TEXT_CANVAS.w,
-        enabled: true, material: makeDecalMaterial(textTexture),
+        enabled: false, material: makeDecalMaterial(textTexture),
     },
 };
 
@@ -380,7 +380,12 @@ function drawShield() {
     const S = shieldCanvas.width;
     const ctx = shieldCanvas.getContext('2d', { willReadFrequently: true });
     ctx.clearRect(0, 0, S, S);
-    if (!img) return;
+
+    if (!img) {
+        decals.shield.enabled = false;
+        shieldTexture.needsUpdate = true;
+        return;
+    }
 
     const pad = S * 0.04;
     const scale = Math.min((S - 2 * pad) / img.width, (S - 2 * pad) / img.height);
@@ -577,6 +582,9 @@ loader.load(
         strapMesh.material = baseMat;
         originalMap = null;
 
+        // Monograma oficial FINTTA en relieve gris sobre UN SOLO lado (lateral exterior del talón)
+        addSoleHeelLogos(gltf.scene);
+
         modelBox = new THREE.Box3().setFromObject(gltf.scene);
         floor.position.y = modelBox.min.y - 0.002;
 
@@ -584,14 +592,7 @@ loader.load(
         await new Promise((r) => requestAnimationFrame(r));
 
         const strap = analyzeStrap();
-        
-        const shieldX = strap.center + toe.x * strap.length * 0.12;
-        const textX = strap.center - toe.x * strap.length * 0.3;
-
-        const s = surfaceAt(shieldX, strap.cz);
-        if (s) Object.assign(decals.shield, s);
-        const t = surfaceAt(textX, strap.cz);
-        if (t) Object.assign(decals.text, t);
+        updateDecalPositions(strap);
 
         decals.shield.baseSize = THREE.MathUtils.clamp(strap.length * 0.60, 0.25, 0.45);
         if ($('shield-size')) {
@@ -604,9 +605,10 @@ loader.load(
         goHome();
 
         try { await document.fonts.load('900 100px Outfit'); } catch (e) { /* usa fallback */ }
+        drawShield();
         drawText();
-        buildDecal('text');
         buildDecal('shield');
+        buildDecal('text');
         applyBaseColor();
 
         loaderEl.classList.add('hidden');
@@ -1297,12 +1299,73 @@ $('text-color-picker').addEventListener('input', (e) => {
     drawText();
 });
 
+// Monograma oficial FINTTA grabado en gris en el lateral del talón de la suela
+function addSoleHeelLogos(rootScene) {
+    const greyMat = new THREE.MeshStandardMaterial({
+        color: 0xBFBFBF,
+        roughness: 0.45,
+        metalness: 0.08
+    });
+
+    function createMonogram() {
+        const group = new THREE.Group();
+        // Curva del monograma: barra superior horizontal hacia la punta, esquina redondeada, bajada hacia abajo
+        const p0 = new THREE.Vector3(-0.038, 0.025, 0);
+        const p1 = new THREE.Vector3(0.015, 0.025, 0);
+        const p2 = new THREE.Vector3(0.025, -0.025, 0);
+
+        const curve = new THREE.CatmullRomCurve3([p0, p1, p2]);
+        const tubeGeo = new THREE.TubeGeometry(curve, 24, 0.0055, 12, false);
+        const tubeMesh = new THREE.Mesh(tubeGeo, greyMat);
+        tubeMesh.castShadow = true;
+        group.add(tubeMesh);
+
+        // Balón central en el ángulo interior
+        const ballGeo = new THREE.SphereGeometry(0.0065, 16, 16);
+        const ballMesh = new THREE.Mesh(ballGeo, greyMat);
+        ballMesh.position.set(-0.008, -0.002, 0);
+        ballMesh.scale.set(1, 1, 0.5);
+        ballMesh.castShadow = true;
+        group.add(ballMesh);
+
+        return group;
+    }
+
+    // Lado exterior del talón (un solo lado según indicación de diseño)
+    const outerLogo = createMonogram();
+    outerLogo.position.set(0.67, -0.172, 0.222);
+    outerLogo.rotation.set(0, 0.16, 0);
+    rootScene.add(outerLogo);
+}
+
+function updateDecalPositions(strapInfo) {
+    if (!sandal || !modelBox) return;
+    const strap = strapInfo || analyzeStrap();
+    const hasText = Boolean(state.text && state.text.trim());
+    const shieldX = hasText ? (strap.center + toe.x * strap.length * 0.12) : strap.center;
+    const textX = strap.center - toe.x * strap.length * 0.3;
+
+    const s = surfaceAt(shieldX, strap.cz);
+    if (s) Object.assign(decals.shield, s);
+    const t = surfaceAt(textX, strap.cz);
+    if (t) Object.assign(decals.text, t);
+}
+
 $('custom-text-input').addEventListener('input', (e) => {
     const wasEnabled = decals.text.enabled;
+    const hadText = Boolean(state.text && state.text.trim());
     state.text = e.target.value;
+    const nowHasText = Boolean(state.text && state.text.trim());
+
+    if (hadText !== nowHasText) {
+        updateDecalPositions();
+        buildDecal('shield');
+    }
     drawText();
-    if (wasEnabled !== decals.text.enabled) buildDecal('text');
-    setActiveTarget('text');
+    if (wasEnabled !== decals.text.enabled || hadText !== nowHasText) {
+        buildDecal('text');
+    }
+    setActiveTarget(nowHasText ? 'text' : 'shield');
 });
 
 $('text-size').addEventListener('input', (e) => {
@@ -1487,7 +1550,7 @@ $('shield-remove').addEventListener('click', () => {
     state.shieldFile = null;
     state.originalShieldFile = null;
     state.shieldImage = null;
-    decals.shield.enabled = false;
+    drawShield();
     buildDecal('shield');
     $('shield-upload').value = '';
     $('shield-thumb').hidden = true;
@@ -1497,6 +1560,7 @@ $('shield-remove').addEventListener('click', () => {
     if ($('png-badge')) $('png-badge').hidden = true;
     $('shield-tools').hidden = true;
     $('shield-remove').hidden = true;
+    toast('Escudo eliminado. Tira limpia.');
 });
 
 // ---------------------------------------------------------------------
@@ -1537,7 +1601,7 @@ $('order-btn').addEventListener('click', async () => {
         `📋 Plantel / Cantidad: ${state.quantityNum || 1} ${state.quantityNum === 1 ? 'par' : 'pares'} (${state.quantity === 'mayorista' ? 'Mayorista / Club' : 'Minorista - Tira Negra'})`,
         `👟 Curva de talles: A coordinar por WhatsApp`,
         `🎽 Color de tira: ${state.baseName || 'Negro (Oficial)'}`,
-        `⚽ Escudo del Club: ${state.shieldFile ? (state.quantity === 'minorista' ? 'Sí (Grabado en Gris oficial)' : 'Sí (A todo color)') : 'Sin escudo'}`,
+        `⚽ Escudo del Club: ${state.shieldFile ? (state.quantity === 'minorista' ? 'Sí (Grabado en Gris oficial)' : 'Sí (A todo color)') : 'Logo oficial FINTTA (Grabado en Gris)'}`,
         `🔟 Dorsal: ${text ? `${text} (${state.quantity === 'minorista' ? 'Negro oficial' : (state.textColorName || 'Negro')})` : 'Sin dorsal'}`,
         `💵 Presupuesto unitario: ${PRICE_LABEL}`,
         '',

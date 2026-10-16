@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" width="400" height="320">
+  <defs>
+    <filter id="subtle-emboss" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.7"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#subtle-emboss)">
+    <!-- Monograma FINTTA oficial: F deportiva curvada con terminaciones redondeadas -->
+    <path d="M 235 65 L 130 65 Q 85 65 72 105 L 52 185" 
+          fill="none" 
+          stroke="#C8C8C8" 
+          stroke-width="34" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+    
+    <!-- Balón de gambeta central -->
+    <circle cx="128" cy="122" r="16" fill="#C8C8C8" />
+
+    <!-- Wordmark oficial FINTTA -->
+    <text x="200" y="270" 
+          fill="#C8C8C8"
+          font-family="'Outfit', 'Impact', sans-serif" 
+          font-size="64" 
+          font-weight="900" 
+          font-style="italic" 
+          letter-spacing="3" 
+          text-anchor="middle">FINTTA</text>
+  </g>
+</svg>

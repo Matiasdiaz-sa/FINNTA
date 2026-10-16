@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <filter id="sole-engrave" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-color="#000000" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+  <g filter="url(#sole-engrave)">
+    <!-- Monograma FINTTA oficial para lateral de suela (talón) -->
+    <path d="M 175 75 L 105 75 Q 82 75 76 98 L 65 175" 
+          fill="none" 
+          stroke="#C5C5C5" 
+          stroke-width="26" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+    <circle cx="118" cy="116" r="13" fill="#C5C5C5" />
+  </g>
+</svg>
